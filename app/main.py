@@ -96,7 +96,8 @@ threading.Timer(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-
+UPLOADS_DIR = BASE_DIR / "static" / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 # ==================================================
 # STATIC FILES
 # ==================================================
