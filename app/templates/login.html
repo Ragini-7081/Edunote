@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduNote - Login</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+        body.login-page {
+            display: block;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-nav {
+            display: flex;
+            align-items: center;
+            min-height: 64px;
+            padding: 0 3%;
+            background: linear-gradient(90deg, #1e40af, #2563eb);
+            border-bottom: 1px solid rgba(30, 64, 175, 0.35);
+            box-shadow: 0 2px 10px rgba(30, 64, 175, 0.16);
+        }
+
+        .login-brand {
+            color: #ffffff;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-decoration: none;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 64px);
+            padding: 32px 20px;
+        }
+
+        .auth-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: min(920px, 100%);
+            max-width: 920px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 22px;
+            box-shadow: 0 18px 50px rgba(30, 64, 175, 0.2);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .auth-card.ready-to-hover:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 20px 44px rgba(37, 99, 235, 0.2);
+        }
+
+        .auth-art {
+            min-height: 520px;
+            background: #eaf2ff url("/static/images/login-illustration-reference.png") left center / 200% 100% no-repeat;
+        }
+
+        .auth-form {
+            padding: 58px 52px;
+            background: rgba(255, 255, 255, 0.96);
+        }
+
+        .auth-form .logo,
+        .auth-form .subtitle,
+        .auth-form h2 {
+            text-align: left;
+        }
+
+        .auth-form .logo {
+            margin-bottom: 8px;
+            font-size: 2.2rem;
+        }
+
+        .auth-form .subtitle {
+            margin-bottom: 32px;
+        }
+
+        .auth-form h2 {
+            color: #1e3a8a;
+            margin-bottom: 24px;
+        }
+
+        .auth-form .btn {
+            border-radius: 8px;
+            background: #1d4ed8;
+        }
+
+        .auth-form .btn:hover {
+            background: #1e40af;
+        }
+
+        @media (max-width: 720px) {
+            .auth-card { grid-template-columns: 1fr; max-width: 460px; }
+            .auth-art { min-height: 250px; background-size: 200% 100%; }
+            .auth-form { padding: 36px 28px; }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/student-theme.css" />
+</head>
+<body class="login-page">
+
+    <nav class="login-nav" aria-label="Main navigation">
+        <a class="login-brand" href="/">📚 EduNote</a>
+    </nav>
+
+    <div class="container">
+        <div class="auth-card">
+
+            <div class="auth-art" aria-label="Student learning illustration"></div>
+
+            <div class="auth-form">
+
+            <h1 class="logo">EduNote</h1>
+            <p class="subtitle">
+                Smart Learning & Video Annotation Platform
+            </p>
+
+            <h2>Login</h2>
+
+            <form id="loginForm">
+
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        required
+                    />
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    />
+                </div>
+
+                <button type="submit" class="btn">
+                    Login
+                </button>
+
+            </form>
+
+            <p class="register-link">
+                Don't have an account?
+                <a href="/register">Register Here</a>
+            </p>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+    <script>
+        window.setTimeout(function () {
+            document.querySelector(".auth-card")?.classList.add("ready-to-hover");
+        }, 5000);
+    </script>
+</body>
+</html>

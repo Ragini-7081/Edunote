@@ -1,0 +1,4199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>EduNote — Student Dashboard</title>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+rel="stylesheet">
+
+<script
+src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+</script>
+
+<style>
+
+/* =========================================================
+   RESET
+========================================================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Poppins",sans-serif;
+}
+
+
+/* =========================================================
+   TOKENS
+========================================================= */
+
+:root{
+    --primary:#7c3aed;
+    --pd:#6d28d9;
+    --bg:#f1f5f9;
+    --white:#ffffff;
+    --text:#1e293b;
+    --light:#64748b;
+    --border:#e2e8f0;
+    --shadow:0 8px 30px rgba(0,0,0,.08);
+    --radius:16px;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+
+    width:256px;
+    height:100vh;
+
+    background:#0f172a;
+    color:#fff;
+
+    display:flex;
+    flex-direction:column;
+
+    z-index:100;
+
+    overflow-y:auto;
+}
+
+.sidebar::-webkit-scrollbar{
+    width:4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+    background:#334155;
+    border-radius:20px;
+}
+
+
+/* BRAND */
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:26px 22px 20px;
+
+    border-bottom:1px solid #1e293b;
+}
+
+.brand-icon{
+    width:44px;
+    height:44px;
+
+    border-radius:12px;
+
+    background:linear-gradient(
+        135deg,
+        #7c3aed,
+        #a78bfa
+    );
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:20px;
+
+    flex-shrink:0;
+}
+
+.brand h2{
+    font-size:18px;
+    font-weight:700;
+    color:#fff;
+}
+
+.brand p{
+    font-size:11px;
+    color:#94a3b8;
+    margin-top:2px;
+}
+
+
+/* NAVIGATION */
+
+.nav-label{
+    font-size:10px;
+    font-weight:600;
+
+    color:#475569;
+
+    text-transform:uppercase;
+
+    letter-spacing:1.2px;
+
+    padding:18px 22px 7px;
+}
+
+.menu{
+    list-style:none;
+    padding:0 10px;
+}
+
+.menu li a{
+    display:flex;
+    align-items:center;
+
+    gap:11px;
+
+    padding:11px 14px;
+
+    border-radius:10px;
+
+    color:#cbd5e1;
+
+    text-decoration:none;
+
+    font-size:13px;
+
+    font-weight:500;
+
+    transition:.25s;
+
+    margin-bottom:2px;
+}
+
+.menu li a:hover,
+.menu li.active a{
+    background:#7c3aed;
+    color:#fff;
+}
+
+.menu li a .icon{
+    font-size:16px;
+    flex-shrink:0;
+}
+
+
+/* SIDEBAR FOOTER */
+
+.sidebar-footer{
+    margin-top:auto;
+
+    padding:18px 22px;
+
+    border-top:1px solid #1e293b;
+}
+
+.sidebar-footer a{
+    display:flex;
+    align-items:center;
+
+    gap:10px;
+
+    color:#94a3b8;
+
+    text-decoration:none;
+
+    font-size:13px;
+
+    padding:9px 12px;
+
+    border-radius:10px;
+
+    transition:.25s;
+}
+
+.sidebar-footer a:hover{
+    background:#1e293b;
+    color:#fff;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main-content{
+    margin-left:256px;
+    min-height:100vh;
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar{
+    position:sticky;
+    top:0;
+
+    z-index:50;
+
+    background:var(--white);
+
+    padding:14px 28px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    box-shadow:
+        0 2px 12px rgba(0,0,0,.06);
+
+    border-bottom:1px solid var(--border);
+
+    gap:16px;
+}
+
+
+/* SEARCH */
+
+.search-wrap{
+    position:relative;
+
+    flex:1;
+
+    max-width:440px;
+}
+
+.search-wrap input{
+    width:100%;
+
+    padding:10px 16px 10px 40px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    font-size:13px;
+
+    outline:none;
+
+    background:#f8fafc;
+
+    transition:.3s;
+}
+
+.search-wrap input:focus{
+    border-color:var(--primary);
+
+    background:#fff;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(124,58,237,.08);
+}
+
+.search-icon{
+    position:absolute;
+
+    left:13px;
+    top:50%;
+
+    transform:translateY(-50%);
+
+    color:#94a3b8;
+
+    font-size:15px;
+
+    pointer-events:none;
+}
+
+
+/* TOPBAR RIGHT */
+
+.topbar-right{
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+}
+
+.avatar-wrap{
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    cursor:pointer;
+}
+
+.avatar{
+    width:40px;
+    height:40px;
+
+    border-radius:12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #a78bfa
+        );
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:#fff;
+
+    font-weight:700;
+
+    font-size:16px;
+
+    flex-shrink:0;
+}
+
+.av-info h4{
+    font-size:13px;
+
+    font-weight:600;
+
+    line-height:1.2;
+}
+
+.av-info small{
+    color:var(--light);
+
+    font-size:11px;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.page{
+    padding:24px 28px 48px;
+}
+
+
+/* =========================================================
+   BANNER
+========================================================= */
+
+.banner{
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed 0%,
+            #6d28d9 100%
+        );
+
+    border-radius:20px;
+
+    padding:28px 32px;
+
+    color:#fff;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:24px;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+.banner::before{
+    content:"";
+
+    position:absolute;
+
+    right:-60px;
+    top:-60px;
+
+    width:240px;
+    height:240px;
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.07);
+
+    pointer-events:none;
+}
+
+.banner-text h1{
+    font-size:24px;
+
+    font-weight:700;
+
+    margin-bottom:6px;
+}
+
+.banner-text p{
+    font-size:13px;
+
+    opacity:.85;
+
+    line-height:1.5;
+}
+
+.btn-white{
+    padding:10px 20px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#fff;
+
+    color:var(--primary);
+
+    font-weight:600;
+
+    font-size:13px;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+    text-decoration:none;
+
+    display:inline-block;
+
+    white-space:nowrap;
+
+    flex-shrink:0;
+}
+
+.btn-white:hover{
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.15);
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:18px;
+
+    margin-bottom:24px;
+}
+
+.s-card{
+    background:var(--white);
+
+    border-radius:var(--radius);
+
+    padding:20px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    box-shadow:var(--shadow);
+
+    border:1px solid var(--border);
+
+    transition:.3s;
+}
+
+.s-card:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 14px 35px
+        rgba(0,0,0,.1);
+}
+
+.s-icon{
+    width:50px;
+    height:50px;
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:22px;
+
+    flex-shrink:0;
+}
+
+.ic-p{
+    background:#f3e8ff;
+}
+
+.ic-b{
+    background:#dbeafe;
+}
+
+.ic-g{
+    background:#dcfce7;
+}
+
+.ic-y{
+    background:#fef3c7;
+}
+
+.s-info h3{
+    font-size:12px;
+
+    color:var(--light);
+
+    font-weight:500;
+
+    margin-bottom:3px;
+}
+
+.s-info p{
+    font-size:24px;
+
+    font-weight:700;
+
+    line-height:1.2;
+}
+
+
+/* =========================================================
+   ANALYTICS
+========================================================= */
+
+.analytics-row{
+    display:grid;
+
+    grid-template-columns:
+        2fr 1fr;
+
+    gap:20px;
+
+    margin-bottom:28px;
+}
+
+.chart-card{
+    background:var(--white);
+
+    border-radius:var(--radius);
+
+    padding:22px;
+
+    box-shadow:var(--shadow);
+
+    border:1px solid var(--border);
+}
+
+.chart-card h3{
+    font-size:15px;
+
+    font-weight:600;
+
+    margin-bottom:18px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+}
+
+
+/* =========================================================
+   STREAK
+========================================================= */
+
+.streak-card{
+    background:
+        linear-gradient(
+            135deg,
+            #f59e0b,
+            #d97706
+        );
+
+    border-radius:var(--radius);
+
+    padding:22px;
+
+    color:#fff;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+}
+
+.streak-card h3{
+    font-size:15px;
+
+    font-weight:600;
+}
+
+.streak-num{
+    font-size:56px;
+
+    font-weight:700;
+
+    line-height:1;
+}
+
+.streak-label{
+    font-size:13px;
+
+    opacity:.9;
+}
+
+.streak-days{
+    display:flex;
+
+    gap:6px;
+
+    flex-wrap:wrap;
+
+    margin-top:4px;
+}
+
+.day-dot{
+    width:30px;
+    height:30px;
+
+    border-radius:8px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:10px;
+
+    font-weight:600;
+}
+
+.day-active{
+    background:
+        rgba(255,255,255,.3);
+
+    color:#fff;
+}
+
+.day-inactive{
+    background:
+        rgba(255,255,255,.12);
+
+    color:
+        rgba(255,255,255,.45);
+}
+
+
+/* =========================================================
+   SECTION HEAD
+========================================================= */
+
+.section-head-row{
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:16px;
+}
+
+.section-head-row h2{
+    font-size:18px;
+
+    font-weight:700;
+}
+
+.section-head-row span{
+    font-size:13px;
+
+    color:var(--light);
+}
+
+
+/* =========================================================
+   CATEGORY TABS
+========================================================= */
+
+.cat-tabs{
+    display:flex;
+
+    gap:8px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:20px;
+}
+
+.cat-tab{
+    padding:8px 16px;
+
+    border:none;
+
+    border-radius:30px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    font-size:12px;
+
+    color:#334155;
+
+    background:var(--white);
+
+    box-shadow:
+        0 2px 8px
+        rgba(0,0,0,.06);
+
+    transition:.25s;
+}
+
+.cat-tab.active,
+.cat-tab:hover{
+    background:var(--primary);
+
+    color:#fff;
+}
+
+
+/* =========================================================
+   BOOK GRID
+========================================================= */
+
+.books-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(210px,1fr)
+        );
+
+    gap:20px;
+
+    margin-bottom:32px;
+}
+
+.book-card{
+    background:var(--white);
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:var(--shadow);
+
+    transition:.32s;
+
+    border:1px solid var(--border);
+
+    cursor:pointer;
+}
+
+.book-card:hover{
+    transform:translateY(-6px);
+
+    box-shadow:
+        0 20px 50px
+        rgba(0,0,0,.14);
+}
+
+.book-cover{
+    height:160px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:60px;
+
+    position:relative;
+}
+
+.cv0{
+    background:
+        linear-gradient(
+            135deg,
+            #dbeafe,
+            #bfdbfe
+        );
+}
+
+.cv1{
+    background:
+        linear-gradient(
+            135deg,
+            #dcfce7,
+            #bbf7d0
+        );
+}
+
+.cv2{
+    background:
+        linear-gradient(
+            135deg,
+            #fef3c7,
+            #fde68a
+        );
+}
+
+.cv3{
+    background:
+        linear-gradient(
+            135deg,
+            #f3e8ff,
+            #e9d5ff
+        );
+}
+
+.cv4{
+    background:
+        linear-gradient(
+            135deg,
+            #fee2e2,
+            #fecaca
+        );
+}
+
+.cv5{
+    background:
+        linear-gradient(
+            135deg,
+            #e0f2fe,
+            #bae6fd
+        );
+}
+
+.cv6{
+    background:
+        linear-gradient(
+            135deg,
+            #fce7f3,
+            #fbcfe8
+        );
+}
+
+.cv7{
+    background:
+        linear-gradient(
+            135deg,
+            #d1fae5,
+            #a7f3d0
+        );
+}
+
+.cat-badge{
+    position:absolute;
+
+    top:10px;
+    left:10px;
+
+    padding:3px 10px;
+
+    border-radius:20px;
+
+    font-size:10px;
+
+    font-weight:700;
+
+    background:
+        rgba(255,255,255,.85);
+
+    color:#334155;
+
+    font-family:"Poppins",sans-serif;
+}
+
+.book-body{
+    padding:16px;
+}
+
+.book-body h3{
+    font-size:14px;
+
+    font-weight:700;
+
+    margin-bottom:4px;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    color:var(--text);
+}
+
+.bk-author{
+    font-size:11px;
+
+    color:var(--light);
+
+    margin-bottom:8px;
+}
+
+.bk-stats{
+    display:flex;
+
+    gap:10px;
+
+    font-size:11px;
+
+    color:#475569;
+
+    margin-bottom:12px;
+}
+
+.read-btn,
+.buy-btn{
+    width:100%;
+
+    padding:9px;
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    font-size:12px;
+
+    transition:.25s;
+}
+
+.read-btn{
+    background:var(--primary);
+}
+
+.read-btn:hover{
+    background:var(--pd);
+
+    transform:translateY(-1px);
+}
+
+.buy-btn{
+    background:#16a34a;
+}
+
+.buy-btn:hover{
+    background:#15803d;
+
+    transform:translateY(-1px);
+
+    box-shadow:
+        0 6px 15px rgba(22,163,74,.25);
+}
+
+.book-price{
+    color:#15803d;
+    font-size:14px;
+    font-weight:700;
+    margin-bottom:9px;
+}
+
+.free-label{
+    color:#16a34a;
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:9px;
+}
+
+
+/* =========================================================
+   EMPTY BOOKS
+========================================================= */
+
+.empty-books{
+    grid-column:1/-1;
+
+    text-align:center;
+
+    padding:60px 20px;
+
+    color:var(--light);
+}
+
+.empty-books .ei{
+    font-size:56px;
+
+    margin-bottom:14px;
+}
+
+.empty-books p{
+    font-size:14px;
+}
+
+
+/* =========================================================
+   STUDENT VIDEO SECTION
+========================================================= */
+
+.student-video-section{
+    margin-top:32px;
+    margin-bottom:35px;
+}
+
+.student-video-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:20px;
+    gap:20px;
+}
+
+.student-video-header-left{
+    min-width:0;
+}
+
+.section-label{
+    display:inline-block;
+    color:#f59e0b;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:1px;
+    margin-bottom:4px;
+}
+
+.student-video-header h2{
+    font-size:23px;
+    font-weight:700;
+    color:#1e293b;
+    margin:4px 0;
+}
+
+.student-video-header p{
+    color:#64748b;
+    font-size:13px;
+    line-height:1.6;
+    margin:0;
+}
+
+.view-all-videos{
+    text-decoration:none;
+    color:#d97706;
+    font-size:13px;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+.view-all-videos:hover{
+    color:#b45309;
+}
+
+.student-video-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(3,minmax(0,1fr));
+    gap:20px;
+}
+
+.student-video-card{
+    background:#fff;
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid #e2e8f0;
+    box-shadow:0 8px 25px rgba(0,0,0,.06);
+    transition:
+        transform .3s ease,
+        box-shadow .3s ease;
+}
+
+.student-video-card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 16px 35px rgba(0,0,0,.11);
+}
+
+.student-video-thumbnail{
+    height:180px;
+    background:#0f172a;
+    position:relative;
+    overflow:hidden;
+}
+
+.student-video-thumbnail img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+}
+
+.student-video-thumbnail.no-thumbnail{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        linear-gradient(
+            135deg,
+            #1e293b,
+            #334155
+        );
+}
+
+.video-placeholder-icon{
+    font-size:52px;
+    opacity:.9;
+}
+
+.student-video-play{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:52px;
+    height:52px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:#f59e0b;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    padding-left:3px;
+    box-shadow:0 8px 20px rgba(0,0,0,.25);
+    transition:.25s;
+    cursor:pointer;
+}
+
+.student-video-card:hover .student-video-play{
+    transform:
+        translate(-50%,-50%)
+        scale(1.08);
+}
+
+.video-duration{
+    position:absolute;
+    right:10px;
+    bottom:10px;
+    background:rgba(15,23,42,.85);
+    color:#fff;
+    padding:4px 7px;
+    border-radius:6px;
+    font-size:10px;
+    font-weight:600;
+}
+
+.video-category{
+    position:absolute;
+    top:10px;
+    left:10px;
+    background:rgba(255,255,255,.92);
+    color:#334155;
+    padding:4px 9px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:700;
+}
+
+.video-paid-badge{
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:#f59e0b;
+    color:#fff;
+    padding:4px 9px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:700;
+    box-shadow:0 3px 8px rgba(0,0,0,.2);
+}
+
+.video-free-badge{
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:#16a34a;
+    color:#fff;
+    padding:4px 9px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:700;
+}
+
+.student-video-content{
+    padding:16px;
+}
+
+.student-video-content h3{
+    font-size:15px;
+    font-weight:700;
+    color:#1e293b;
+    margin:0 0 6px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.student-video-description{
+    color:#64748b;
+    font-size:11px;
+    line-height:1.6;
+    min-height:35px;
+    margin:0;
+}
+
+.student-video-seller{
+    margin-top:10px;
+    font-size:11px;
+    color:#64748b;
+}
+
+.student-video-seller strong{
+    color:#334155;
+}
+
+.student-video-meta{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:#64748b;
+    font-size:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+}
+
+.student-video-meta span{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+}
+
+.student-video-price{
+    margin-top:10px;
+    font-size:14px;
+    font-weight:700;
+    color:#d97706;
+}
+
+.watch-video-btn,
+.buy-video-btn{
+    display:block;
+    width:100%;
+    margin-top:13px;
+    padding:10px;
+    border:none;
+    border-radius:9px;
+    color:#fff;
+    font-weight:600;
+    font-size:12px;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.watch-video-btn{
+    background:#f59e0b;
+}
+
+.watch-video-btn:hover{
+    background:#d97706;
+    transform:translateY(-1px);
+}
+
+.buy-video-btn{
+    background:#16a34a;
+}
+
+.buy-video-btn:hover{
+    background:#15803d;
+    transform:translateY(-1px);
+    box-shadow:0 6px 15px rgba(22,163,74,.25);
+}
+
+.video-loading{
+    grid-column:1/-1;
+    text-align:center;
+    padding:55px 20px;
+    color:#64748b;
+}
+
+.video-loading-icon{
+    font-size:42px;
+    margin-bottom:10px;
+}
+
+.video-empty{
+    grid-column:1/-1;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    padding:55px 20px;
+    text-align:center;
+    color:#64748b;
+}
+
+.video-empty-icon{
+    font-size:50px;
+    margin-bottom:12px;
+}
+
+.video-empty h3{
+    color:#1e293b;
+    font-size:17px;
+    margin-bottom:5px;
+}
+
+.video-empty p{
+    font-size:12px;
+}
+
+.video-error{
+    grid-column:1/-1;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    border-radius:14px;
+    padding:20px;
+    text-align:center;
+    color:#9a3412;
+    font-size:13px;
+}
+
+
+/* =========================================================
+   PAYMENT OVERLAY
+========================================================= */
+
+.payment-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.65);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:9999;
+}
+
+.payment-overlay.show{
+    display:flex;
+}
+
+.payment-box{
+    width:min(460px,100%);
+    background:#fff;
+    border-radius:20px;
+    padding:26px;
+    box-shadow:0 25px 80px rgba(0,0,0,.25);
+}
+
+.payment-box h3{
+    font-size:20px;
+    margin-bottom:14px;
+}
+
+.payment-item{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    padding:13px;
+    border-radius:12px;
+    margin-bottom:15px;
+    font-size:13px;
+    color:#334155;
+}
+
+.payment-amount{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+.payment-method{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    outline:none;
+    margin-bottom:15px;
+    font-family:"Poppins",sans-serif;
+}
+
+.payment-actions{
+    display:flex;
+    gap:10px;
+}
+
+.payment-actions button{
+    flex:1;
+    padding:11px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.payment-cancel{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.payment-confirm{
+    background:#16a34a;
+    color:#fff;
+}
+
+.payment-confirm:hover{
+    background:#15803d;
+}
+
+.payment-status{
+    margin-top:13px;
+    font-size:12px;
+    text-align:center;
+    min-height:18px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:1200px){
+
+    .analytics-row{
+        grid-template-columns:1fr;
+    }
+
+    .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .student-video-grid{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr));
+    }
+
+}
+
+@media(max-width:900px){
+
+    .sidebar{
+        width:68px;
+    }
+
+    .brand p,
+    .brand h2,
+    .nav-label,
+    .menu li a span:not(.icon),
+    .sidebar-footer a span:not(:first-child){
+        display:none;
+    }
+
+    .brand{
+        padding:16px;
+        justify-content:center;
+    }
+
+    .menu li a{
+        padding:13px;
+        justify-content:center;
+    }
+
+    .main-content{
+        margin-left:68px;
+    }
+
+    .page{
+        padding:16px 14px;
+    }
+
+    .books-grid{
+        grid-template-columns:
+            repeat(
+                auto-fill,
+                minmax(170px,1fr)
+            );
+    }
+
+    .student-video-grid{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr));
+    }
+
+}
+
+@media(max-width:600px){
+
+    .stats-grid{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .banner{
+        flex-direction:column;
+        gap:16px;
+        text-align:center;
+    }
+
+    .banner::before{
+        display:none;
+    }
+
+    .topbar{
+        padding:12px 16px;
+    }
+
+    .student-video-grid{
+        grid-template-columns:1fr;
+    }
+
+    .student-video-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+    }
+
+    .student-video-thumbnail{
+        height:200px;
+    }
+
+    .payment-actions{
+        flex-direction:column;
+    }
+
+}
+
+</style>
+
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+
+<body>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            🎓
+        </div>
+
+        <div>
+
+            <h2>EduNote</h2>
+
+            <p>
+                Student Space
+            </p>
+
+        </div>
+
+    </div>
+
+    <span class="nav-label">
+        Navigation
+    </span>
+
+    <ul class="menu">
+
+        <li class="active">
+
+            <a href="/student/{{ user.id }}">
+
+                <span class="icon">
+                    🏠
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="#browseSection">
+
+                <span class="icon">
+                    📚
+                </span>
+
+                <span>
+                    Browse Books
+                </span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="#analyticsSection">
+
+                <span class="icon">
+                    📊
+                </span>
+
+                <span>
+                    My Analytics
+                </span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="/student-profile/{{ user.id }}">
+
+                <span class="icon">
+                    👤
+                </span>
+
+                <span>
+                    My Profile
+                </span>
+
+            </a>
+
+        </li>
+
+    </ul>
+
+    <div class="sidebar-footer">
+
+        <a href="/logout">
+
+            <span>
+                🚪
+            </span>
+
+            <span>
+                Logout
+            </span>
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================================================
+     MAIN CONTENT
+========================================================= -->
+
+<div class="main-content">
+
+    <div class="topbar">
+
+        <div class="search-wrap">
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+            <input
+                type="text"
+                id="globalSearch"
+                placeholder="Search books, authors, categories..."
+            >
+
+        </div>
+
+        <div class="topbar-right">
+
+            <div class="avatar-wrap">
+
+                <div class="avatar">
+                    {{ user.full_name[0] | upper }}
+                </div>
+
+                <div class="av-info">
+
+                    <h4>
+                        {{ user.full_name }}
+                    </h4>
+
+                    <small>
+                        Student
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="page">
+
+        <div class="banner">
+
+            <div class="banner-text">
+
+                <h1>
+                    Welcome back,
+                    {{ user.full_name }}
+                    🎓
+                </h1>
+
+                <p>
+                    Discover books, track your reading growth,
+                    and never stop learning.
+                </p>
+
+            </div>
+
+            <a
+                href="#browseSection"
+                class="btn-white"
+            >
+                📚 Browse Books
+            </a>
+
+        </div>
+
+        <!-- =========================================================
+     STUDENT LEARNING ANALYTICS
+========================================================== -->
+
+<div class="s-card">
+    <div class="s-icon ic-p">
+        🎬
+    </div>
+
+    <div class="s-info">
+        <h3>
+            Videos Watched
+        </h3>
+
+        <p id="st-videos">
+            —
+        </p>
+    </div>
+</div>
+
+
+<div class="s-card">
+    <div class="s-icon ic-b">
+        📝
+    </div>
+
+    <div class="s-info">
+        <h3>
+            My Notes
+        </h3>
+
+        <p id="st-notes">
+            —
+        </p>
+    </div>
+</div>
+
+
+<div class="s-card">
+    <div class="s-icon ic-g">
+        💬
+    </div>
+
+    <div class="s-info">
+        <h3>
+            Video Comments
+        </h3>
+
+        <p id="st-video-comments">
+            —
+        </p>
+    </div>
+</div>
+
+
+<div class="s-card">
+    <div class="s-icon ic-y">
+        📈
+    </div>
+
+    <div class="s-info">
+        <h3>
+            Learning Progress
+        </h3>
+
+        <p id="st-progress">
+            —
+        </p>
+    </div>
+</div>
+
+        <div
+            id="analyticsSection"
+            class="analytics-row"
+        >
+
+            <div class="chart-card">
+
+                <h3>
+                    📊 Reading Progress Overview
+                </h3>
+
+                <canvas
+                    id="progressChart"
+                    height="130"
+                ></canvas>
+
+            </div>
+
+            <div class="streak-card">
+
+                <h3>
+                    🔥 Reading Streak
+                </h3>
+
+                <div
+                    class="streak-num"
+                    id="streakNum"
+                >
+                    0
+                </div>
+
+                <div class="streak-label">
+                    Days active this month
+                </div>
+
+                <div
+                    class="streak-days"
+                    id="streakDays"
+                ></div>
+
+            </div>
+
+        </div>
+
+        <div id="browseSection">
+
+            <div class="section-head-row">
+
+                <h2>
+                    📚 All Published Books
+                </h2>
+
+                <span id="bookCountLabel"></span>
+
+            </div>
+
+            <div class="cat-tabs">
+
+                <button
+                    class="cat-tab active"
+                    data-cat="all"
+                >
+                    All
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Education"
+                >
+                    📚 Education
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Story"
+                >
+                    📖 Story
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Novel"
+                >
+                    📕 Novel
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Politics"
+                >
+                    🌍 Politics
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Science"
+                >
+                    🔬 Science
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Programming"
+                >
+                    💻 Programming
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Business"
+                >
+                    💼 Business
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="History"
+                >
+                    🏛 History
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Self Help"
+                >
+                    ✨ Self Help
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="Philosophy"
+                >
+                    🧠 Philosophy
+                </button>
+
+                <button
+                    class="cat-tab"
+                    data-cat="other"
+                >
+                    🔎 Other
+                </button>
+
+            </div>
+
+            <div
+                class="books-grid"
+                id="booksGrid"
+            >
+
+                <div class="empty-books">
+
+                    <div class="ei">
+                        ⏳
+                    </div>
+
+                    <p>
+                        Loading books...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <section
+            class="student-video-section"
+            id="studentVideoSection"
+        >
+
+            <div class="student-video-header">
+
+                <div class="student-video-header-left">
+
+                    <span class="section-label">
+                        LEARN WITH VIDEOS
+                    </span>
+
+                    <h2>
+                        Latest Educational Videos 🎬
+                    </h2>
+
+                    <p>
+                        Learn from educational videos
+                        uploaded by our creators.
+                    </p>
+
+                </div>
+
+                <a
+                    href="#studentVideoSection"
+                    class="view-all-videos"
+                    onclick="
+                        loadStudentVideos();
+                        return false;
+                    "
+                >
+                    View All →
+                </a>
+
+            </div>
+
+            <div
+                class="student-video-grid"
+                id="studentVideoGrid"
+            >
+
+                <div class="video-loading">
+
+                    <div class="video-loading-icon">
+                        ⏳
+                    </div>
+
+                    Loading educational videos...
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAYMENT MODAL
+========================================================= -->
+
+<div class="payment-overlay" id="paymentOverlay">
+
+    <div class="payment-box">
+
+        <h3>
+            💳 Complete Purchase
+        </h3>
+
+        <div
+            class="payment-item"
+            id="paymentItemName"
+        >
+            EduNote item
+        </div>
+
+        <div class="payment-amount">
+
+            <span>
+                Total
+            </span>
+
+            <span id="paymentAmount">
+                ₹0.00
+            </span>
+
+        </div>
+
+        <select
+            class="payment-method"
+            id="paymentMethod"
+        >
+
+            <option value="UPI">
+                UPI
+            </option>
+
+            <option value="Card">
+                Debit / Credit Card
+            </option>
+
+            <option value="Net Banking">
+                Net Banking
+            </option>
+
+        </select>
+
+        <div class="payment-actions">
+
+            <button
+                type="button"
+                class="payment-cancel"
+                onclick="closePaymentModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="payment-confirm"
+                id="paymentConfirmBtn"
+                onclick="confirmPurchase()"
+            >
+                Pay Now
+            </button>
+
+        </div>
+
+        <div
+            class="payment-status"
+            id="paymentStatus"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   STUDENT INFORMATION
+========================================================= */
+
+const STUDENT_ID = {{ user.id }};
+
+
+/* =========================================================
+   EXISTING BOOK CONFIGURATION
+========================================================= */
+
+const COVERS = [
+    "cv0",
+    "cv1",
+    "cv2",
+    "cv3",
+    "cv4",
+    "cv5",
+    "cv6",
+    "cv7"
+];
+
+const EMOJIS = [
+    "📘",
+    "📗",
+    "📕",
+    "📙",
+    "📔",
+    "📒",
+    "📓",
+    "📖"
+];
+
+const KNOWN_CATS = [
+    "Education",
+    "Story",
+    "Novel",
+    "Politics",
+    "Science",
+    "Programming",
+    "Business",
+    "History",
+    "Self Help",
+    "Health & Fitness",
+    "Philosophy"
+];
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let allBooks = [];
+let allStudentVideos = [];
+let activeTab = "all";
+let searchQ = "";
+let chartBuilt = false;
+
+let currentPurchase = null;
+async function loadStats(){
+
+    try{
+
+        const r = await fetch(
+            `/student/${STUDENT_ID}/stats`
+        );
+
+        if(!r.ok){
+            throw new Error(
+                "Stats request failed"
+            );
+        }
+
+        const d = await r.json();
+
+        /*
+         * =====================================================
+         * EXISTING STUDENT STATS
+         * =====================================================
+         */
+
+        document.getElementById(
+            "st-read"
+        ).innerText =
+            d.books_read ?? 0;
+
+        document.getElementById(
+            "st-avail"
+        ).innerText =
+            d.total_available ?? 0;
+
+        document.getElementById(
+            "st-comments"
+        ).innerText =
+            d.total_comments ?? 0;
+
+        document.getElementById(
+            "st-streak"
+        ).innerText =
+            (d.streak ?? 0) + " 🔥";
+
+        document.getElementById(
+            "streakNum"
+        ).innerText =
+            d.streak ?? 0;
+
+        /*
+         * =====================================================
+         * NEW STUDENT ANALYTICS
+         * =====================================================
+         */
+
+        const videoElement =
+            document.getElementById(
+                "st-videos"
+            );
+
+        if(videoElement){
+            videoElement.innerText =
+                d.videos_watched ?? 0;
+        }
+
+        const notesElement =
+            document.getElementById(
+                "st-notes"
+            );
+
+        if(notesElement){
+            notesElement.innerText =
+                d.total_notes ?? 0;
+        }
+
+        const videoCommentsElement =
+            document.getElementById(
+                "st-video-comments"
+            );
+
+        if(videoCommentsElement){
+            videoCommentsElement.innerText =
+                d.video_comments ?? 0;
+        }
+
+        const overallProgressElement =
+            document.getElementById(
+                "st-progress"
+            );
+
+        if(overallProgressElement){
+            overallProgressElement.innerText =
+                (d.overall_progress ?? 0) + "%";
+        }
+
+        /*
+         * =====================================================
+         * STREAK
+         * =====================================================
+         */
+
+        buildStreakDots(
+            d.streak ?? 0
+        );
+
+        /*
+         * =====================================================
+         * EXISTING CHART
+         * =====================================================
+         */
+
+        if(!chartBuilt){
+
+            buildChart(
+                d.books_read ?? 0,
+                d.total_available ?? 0,
+                d.overall_progress ?? 0
+            );
+
+            chartBuilt = true;
+        }
+
+    }catch(e){
+
+        console.error(
+            "Stats error:",
+            e
+        );
+
+    }
+
+}
+function buildChart(
+    read,
+    total,
+    pct
+){
+
+    const ctx =
+        document.getElementById(
+            "progressChart"
+        );
+
+    if(!ctx){
+        return;
+    }
+
+    new Chart(
+        ctx,
+        {
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Books Read",
+                    "Books Available",
+                    "Learning Progress"
+                ],
+
+                datasets: [
+                    {
+                        data: [
+                            read,
+                            total,
+                            pct
+                        ],
+
+                        backgroundColor: [
+                            "#7c3aed",
+                            "#a78bfa",
+                            "#f59e0b"
+                        ],
+
+                        borderRadius: 10,
+
+                        borderSkipped: false
+                    }
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function(ctx){
+
+                                if(
+                                    ctx.dataIndex === 2
+                                ){
+                                    return (
+                                        ctx.raw +
+                                        "%"
+                                    );
+                                }
+
+                                return ctx.raw;
+                            }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true
+
+                    },
+
+                    x: {
+
+                        grid: {
+                            display: false
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   BOOKS
+========================================================= */
+
+async function loadBooks(){
+
+    try{
+
+        const r =
+            await fetch(
+                "/published-books"
+            );
+
+        if(!r.ok){
+            throw new Error(
+                "Books request failed"
+            );
+        }
+
+        allBooks =
+            await r.json();
+
+        updateCountLabel();
+        renderBooks();
+
+    }catch(e){
+
+        console.error(
+            "Books loading error:",
+            e
+        );
+
+        document.getElementById(
+            "booksGrid"
+        ).innerHTML = `
+
+            <div class="empty-books">
+
+                <div class="ei">
+                    ⚠️
+                </div>
+
+                <p>
+                    Could not load books.
+                    Is the server running?
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================================================
+   BOOK COUNT
+========================================================= */
+
+function updateCountLabel(){
+
+    document.getElementById(
+        "bookCountLabel"
+    ).innerText =
+
+        allBooks.length +
+        " book" +
+        (
+            allBooks.length !== 1
+            ? "s"
+            : ""
+        ) +
+        " available";
+
+}
+
+
+/* =========================================================
+   BOOK PRICE
+========================================================= */
+
+function getBookPrice(book){
+
+    const possiblePrice =
+        book.price ??
+        book.book_price ??
+        book.amount ??
+        0;
+
+    const price =
+        Number(possiblePrice);
+
+    return Number.isFinite(price)
+        ? price
+        : 0;
+
+}
+
+function isPaidBook(book){
+
+    const price =
+        getBookPrice(book);
+
+    return (
+        price > 0 ||
+        book.is_paid === true ||
+        String(book.is_paid).toLowerCase() === "true"
+    );
+
+}
+
+
+/* =========================================================
+   RENDER BOOKS
+========================================================= */
+
+function renderBooks(){
+
+    const grid =
+        document.getElementById(
+            "booksGrid"
+        );
+
+    if(!grid){
+        return;
+    }
+
+    let list =
+        [...allBooks];
+
+    if(activeTab === "other"){
+
+        list =
+            list.filter(
+                b =>
+                    !KNOWN_CATS.includes(
+                        b.category
+                    )
+            );
+
+    }
+
+    else if(activeTab !== "all"){
+
+        list =
+            list.filter(
+                b =>
+                    (
+                        b.category || ""
+                    ) === activeTab
+            );
+
+    }
+
+    if(searchQ){
+
+        const q =
+            searchQ.toLowerCase();
+
+        list =
+            list.filter(
+                b =>
+
+                    (
+                        b.title || ""
+                    )
+                    .toLowerCase()
+                    .includes(q)
+
+                    ||
+
+                    (
+                        b.author_name || ""
+                    )
+                    .toLowerCase()
+                    .includes(q)
+
+                    ||
+
+                    (
+                        b.category || ""
+                    )
+                    .toLowerCase()
+                    .includes(q)
+
+                    ||
+
+                    (
+                        b.description || ""
+                    )
+                    .toLowerCase()
+                    .includes(q)
+
+            );
+
+    }
+
+    if(!list.length){
+
+        grid.innerHTML = `
+
+            <div class="empty-books">
+
+                <div class="ei">
+                    ${
+                        searchQ
+                        ? "🔍"
+                        : "📭"
+                    }
+                </div>
+
+                <p>
+
+                    ${
+                        searchQ
+
+                        ? `No results for "${escapeHTML(searchQ)}"`
+
+                        : "No books in this category yet."
+
+                    }
+
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+    grid.innerHTML =
+
+        list.map(
+            (b,i) => {
+
+                const price =
+                    getBookPrice(b);
+
+                const paid =
+                    isPaidBook(b);
+
+                return `
+
+                <div
+                    class="book-card"
+                    onclick="${
+                        paid
+                        ? `buyBook(${b.id})`
+                        : `readBook(${b.id})`
+                    }"
+                >
+
+                    <div
+                        class="
+                            book-cover
+                            ${COVERS[
+                                i % COVERS.length
+                            ]}
+                        "
+                    >
+
+                        <span>
+                            ${EMOJIS[
+                                i % EMOJIS.length
+                            ]}
+                        </span>
+
+                        ${
+                            b.category
+
+                            ? `
+
+                                <span
+                                    class="cat-badge"
+                                >
+                                    ${escapeHTML(
+                                        b.category
+                                    )}
+                                </span>
+
+                              `
+
+                            : ""
+                        }
+
+                    </div>
+
+                    <div class="book-body">
+
+                        <h3
+                            title="${escapeAttribute(
+                                b.title || ""
+                            )}"
+                        >
+                            ${escapeHTML(
+                                b.title ||
+                                "Untitled Book"
+                            )}
+                        </h3>
+
+                        <div class="bk-author">
+
+                            ✍️
+                            ${
+                                escapeHTML(
+                                    b.author_name ||
+                                    "Unknown Author"
+                                )
+                            }
+
+                        </div>
+
+                        <div class="bk-stats">
+
+                            <span>
+                                👁 ${b.views || 0}
+                            </span>
+
+                            <span>
+                                ❤️ ${b.likes || 0}
+                            </span>
+
+                            <span>
+                                💬 ${b.comments || 0}
+                            </span>
+
+                        </div>
+
+                        ${
+                            paid
+
+                            ? `
+
+                                <div class="book-price">
+                                    💰 ₹${price.toFixed(2)}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="buy-btn"
+                                    onclick="
+                                        event.stopPropagation();
+                                        buyBook(${b.id});
+                                    "
+                                >
+                                    💳 Buy Now · ₹${price.toFixed(2)}
+                                </button>
+
+                              `
+
+                            : `
+
+                                <div class="free-label">
+                                    ✓ Free
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="read-btn"
+                                    onclick="
+                                        event.stopPropagation();
+                                        readBook(${b.id});
+                                    "
+                                >
+                                    📖 Read Now
+                                </button>
+
+                              `
+                        }
+
+                    </div>
+
+                </div>
+
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* =========================================================
+   READ FREE BOOK
+========================================================= */
+
+function readBook(id){
+
+    id = Number(id);
+
+    if(!id || id <= 0){
+        console.error(
+            "Invalid book ID:",
+            id
+        );
+        return;
+    }
+
+    window.location.href =
+        `/read/${id}?user_id=${STUDENT_ID}`;
+
+}
+
+
+/* =========================================================
+   GET BOOK
+========================================================= */
+
+function getBookById(id){
+
+    id = Number(id);
+
+    return allBooks.find(
+        book => Number(book.id) === id
+    );
+
+}
+
+
+/* =========================================================
+   BUY BOOK
+========================================================= */
+
+function buyBook(id){
+
+    id = Number(id);
+
+    const book =
+        getBookById(id);
+
+    if(!book){
+
+        console.error(
+            "Book not found:",
+            id
+        );
+
+        alert(
+            "Book details could not be loaded. Please refresh the page."
+        );
+
+        return;
+
+    }
+
+    const price =
+        getBookPrice(book);
+
+    if(price <= 0){
+
+        readBook(id);
+
+        return;
+
+    }
+
+    openPaymentModal({
+
+        type:"book",
+
+        id:id,
+
+        amount:price,
+
+        name:book.title || "Book",
+
+        afterPayment:function(){
+
+            window.location.href =
+                `/read/${id}?user_id=${STUDENT_ID}`;
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   CATEGORY FILTER
+========================================================= */
+
+document
+    .querySelectorAll(".cat-tab")
+    .forEach(
+        btn => {
+
+            btn.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            ".cat-tab"
+                        )
+                        .forEach(
+                            b =>
+                                b.classList.remove(
+                                    "active"
+                                )
+                        );
+
+                    btn.classList.add(
+                        "active"
+                    );
+
+                    activeTab =
+                        btn.dataset.cat;
+
+                    renderBooks();
+
+                }
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+const globalSearch =
+    document.getElementById(
+        "globalSearch"
+    );
+
+if(globalSearch){
+
+    globalSearch.addEventListener(
+        "input",
+        function(){
+
+            searchQ =
+                this.value.trim();
+
+            renderBooks();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   VIDEO PRICE
+========================================================= */
+
+function getVideoPrice(video){
+
+    const possiblePrice =
+        video.price ??
+        video.video_price ??
+        video.amount ??
+        0;
+
+    const price =
+        Number(possiblePrice);
+
+    return Number.isFinite(price)
+        ? price
+        : 0;
+
+}
+
+function isPaidVideo(video){
+
+    const price =
+        getVideoPrice(video);
+
+    return (
+        price > 0 ||
+        video.is_paid === true ||
+        String(video.is_paid).toLowerCase() === "true"
+    );
+
+}
+
+
+/* =========================================================
+   LOAD VIDEOS
+========================================================= */
+
+async function loadStudentVideos(){
+
+    const container =
+        document.getElementById(
+            "studentVideoGrid"
+        );
+
+    if(!container){
+        return;
+    }
+
+    container.innerHTML = `
+
+        <div class="video-loading">
+
+            <div class="video-loading-icon">
+                ⏳
+            </div>
+
+            Loading educational videos...
+
+        </div>
+
+    `;
+
+    try{
+
+        const response =
+            await fetch(
+                "/videos"
+            );
+
+        if(!response.ok){
+
+            throw new Error(
+                "Video request failed: " +
+                response.status
+            );
+
+        }
+
+        const data =
+            await response.json();
+
+        if(Array.isArray(data)){
+
+            allStudentVideos =
+                data;
+
+        }
+
+        else if(
+            data &&
+            Array.isArray(
+                data.videos
+            )
+        ){
+
+            allStudentVideos =
+                data.videos;
+
+        }
+
+        else{
+
+            allStudentVideos = [];
+
+        }
+
+        displayStudentVideos(
+            allStudentVideos
+        );
+
+    }catch(error){
+
+        console.error(
+            "Student video loading error:",
+            error
+        );
+
+        container.innerHTML = `
+
+            <div class="video-error">
+
+                ⚠️
+                Unable to load educational videos.
+
+                <br><br>
+
+                Please try again.
+
+                <br><br>
+
+                <button
+                    type="button"
+                    onclick="loadStudentVideos()"
+                    style="
+                        border:none;
+                        background:#f59e0b;
+                        color:white;
+                        padding:8px 16px;
+                        border-radius:8px;
+                        cursor:pointer;
+                        font-weight:600;
+                    "
+                >
+                    Retry
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================================================
+   DISPLAY VIDEOS
+========================================================= */
+
+function displayStudentVideos(
+    videos
+){
+
+    const container =
+        document.getElementById(
+            "studentVideoGrid"
+        );
+
+    if(!container){
+        return;
+    }
+
+    if(
+        !videos ||
+        !videos.length
+    ){
+
+        container.innerHTML = `
+
+            <div class="video-empty">
+
+                <div class="video-empty-icon">
+                    🎬
+                </div>
+
+                <h3>
+                    No educational videos yet
+                </h3>
+
+                <p>
+                    New videos uploaded by
+                    creators will appear here.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+    const publishedVideos =
+        videos.filter(
+            video => {
+
+                return (
+                    !video.status ||
+
+                    String(
+                        video.status
+                    ).toLowerCase()
+                    === "published"
+                );
+
+            }
+        );
+
+    if(
+        !publishedVideos.length
+    ){
+
+        container.innerHTML = `
+
+            <div class="video-empty">
+
+                <div class="video-empty-icon">
+                    🎬
+                </div>
+
+                <h3>
+                    No published videos yet
+                </h3>
+
+                <p>
+                    Published educational
+                    videos will appear here.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+    container.innerHTML =
+
+        publishedVideos
+            .map(
+                createStudentVideoCard
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   CREATE VIDEO CARD
+========================================================= */
+
+function createStudentVideoCard(
+    video
+){
+
+    const id =
+        Number(video.id);
+
+    const title =
+        escapeHTML(
+            video.title ||
+            "Untitled Video"
+        );
+
+    const description =
+        escapeHTML(
+            video.description ||
+            "Educational video on EduNote."
+        );
+
+    const category =
+        escapeHTML(
+            video.category ||
+            "Education"
+        );
+
+    const sellerName =
+        escapeHTML(
+            video.seller_name ||
+            video.seller_full_name ||
+            video.author_name ||
+            "EduNote Creator"
+        );
+
+    const views =
+        Number(
+            video.views || 0
+        );
+
+    const likes =
+        Number(
+            video.likes || 0
+        );
+
+    const comments =
+        Number(
+            video.comments ||
+            video.comment_count ||
+            0
+        );
+
+    const duration =
+        escapeHTML(
+            video.duration || ""
+        );
+
+    const thumbnail =
+        video.thumbnail
+        ? String(video.thumbnail)
+        : "";
+
+    const price =
+        getVideoPrice(video);
+
+    const paid =
+        isPaidVideo(video);
+
+    let thumbnailHTML;
+
+    if(thumbnail){
+
+        thumbnailHTML = `
+
+            <img
+                src="${escapeAttribute(
+                    thumbnail
+                )}"
+                alt="${escapeAttribute(
+                    title
+                )}"
+                loading="lazy"
+
+                onerror="
+                    this.style.display='none';
+
+                    this.parentElement
+                        .classList
+                        .add('no-thumbnail');
+
+                    const icon =
+                        this.parentElement
+                            .querySelector(
+                                '.video-placeholder-icon'
+                            );
+
+                    if(icon){
+                        icon.style.display='block';
+                    }
+                "
+            >
+
+            <div
+                class="video-placeholder-icon"
+                style="display:none;"
+            >
+                🎬
+            </div>
+
+        `;
+
+    }
+
+    else{
+
+        thumbnailHTML = `
+
+            <div class="video-placeholder-icon">
+                🎬
+            </div>
+
+        `;
+
+    }
+
+    return `
+
+        <article
+            class="student-video-card"
+            data-video-id="${id}"
+        >
+
+            <div
+                class="student-video-thumbnail"
+            >
+
+                ${thumbnailHTML}
+
+                ${
+                    paid
+
+                    ? `
+
+                        <div
+                            class="student-video-play"
+                            onclick="
+                                buyVideo(${id});
+                            "
+                            title="Buy video"
+                        >
+                            💳
+                        </div>
+
+                      `
+
+                    : `
+
+                        <div
+                            class="student-video-play"
+                            onclick="
+                                watchStudentVideo(${id});
+                            "
+                            title="Watch video"
+                        >
+                            ▶
+                        </div>
+
+                      `
+                }
+
+                ${
+                    category
+
+                    ? `
+
+                        <div
+                            class="video-category"
+                        >
+                            ${category}
+                        </div>
+
+                      `
+
+                    : ""
+                }
+
+                ${
+                    paid
+
+                    ? `
+
+                        <div
+                            class="video-paid-badge"
+                        >
+                            💳 PAID
+                        </div>
+
+                      `
+
+                    : `
+
+                        <div
+                            class="video-free-badge"
+                        >
+                            FREE
+                        </div>
+
+                      `
+                }
+
+                ${
+                    duration
+
+                    ? `
+
+                        <div
+                            class="video-duration"
+                        >
+                            ${duration}
+                        </div>
+
+                      `
+
+                    : ""
+                }
+
+            </div>
+
+            <div
+                class="student-video-content"
+            >
+
+                <h3
+                    title="${escapeAttribute(
+                        title
+                    )}"
+                >
+                    ${title}
+                </h3>
+
+                <p
+                    class="student-video-description"
+                >
+                    ${description}
+                </p>
+
+                <div
+                    class="student-video-seller"
+                >
+
+                    👨‍🏫
+                    By
+
+                    <strong>
+                        ${sellerName}
+                    </strong>
+
+                </div>
+
+                <div
+                    class="student-video-meta"
+                >
+
+                    <span>
+                        👁️ ${views}
+                    </span>
+
+                    <span>
+                        ❤️ ${likes}
+                    </span>
+
+                    <span>
+                        💬 ${comments}
+                    </span>
+
+                </div>
+
+                ${
+                    paid
+
+                    ? `
+
+                        <div
+                            class="student-video-price"
+                        >
+                            ₹${price.toFixed(2)}
+                        </div>
+
+                      `
+
+                    : `
+
+                        <div
+                            class="student-video-price"
+                        >
+                            Free
+                        </div>
+
+                      `
+                }
+
+                ${
+                    paid
+
+                    ? `
+
+                        <button
+                            type="button"
+                            class="buy-video-btn"
+                            onclick="
+                                buyVideo(${id});
+                            "
+                        >
+                            💳 Buy / Pay ₹${price.toFixed(2)}
+                        </button>
+
+                      `
+
+                    : `
+
+                        <button
+                            type="button"
+                            class="watch-video-btn"
+                            onclick="
+                                watchStudentVideo(${id});
+                            "
+                        >
+                            ▶ Watch Video
+                        </button>
+
+                      `
+                }
+
+            </div>
+
+        </article>
+
+    `;
+
+}
+
+
+/* =========================================================
+   GET VIDEO
+========================================================= */
+
+function getVideoById(id){
+
+    id = Number(id);
+
+    return allStudentVideos.find(
+        video =>
+            Number(video.id) === id
+    );
+
+}
+
+
+/* =========================================================
+   WATCH FREE VIDEO
+========================================================= */
+
+function watchStudentVideo(id){
+
+    id =
+        Number(id);
+
+    if(
+        !id ||
+        id <= 0
+    ){
+
+        console.error(
+            "Invalid video ID:",
+            id
+        );
+
+        return;
+
+    }
+
+    window.location.href =
+        `/video/${id}?student_id=${STUDENT_ID}`;
+
+}
+
+
+/* =========================================================
+   BUY VIDEO
+========================================================= */
+
+function buyVideo(id){
+
+    id =
+        Number(id);
+
+    const video =
+        getVideoById(id);
+
+    if(!video){
+
+        console.error(
+            "Video not found:",
+            id
+        );
+
+        alert(
+            "Video details could not be loaded. Please refresh the page."
+        );
+
+        return;
+
+    }
+
+    const price =
+        getVideoPrice(video);
+
+    if(price <= 0){
+
+        watchStudentVideo(id);
+
+        return;
+
+    }
+
+    openPaymentModal({
+
+        type:"video",
+
+        id:id,
+
+        amount:price,
+
+        name:video.title || "Video",
+
+        afterPayment:function(){
+
+            window.location.href =
+                `/video/${id}?student_id=${STUDENT_ID}`;
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   PAYMENT MODAL
+========================================================= */
+
+function openPaymentModal(purchase){
+
+    currentPurchase =
+        purchase;
+
+    const overlay =
+        document.getElementById(
+            "paymentOverlay"
+        );
+
+    const item =
+        document.getElementById(
+            "paymentItemName"
+        );
+
+    const amount =
+        document.getElementById(
+            "paymentAmount"
+        );
+
+    const status =
+        document.getElementById(
+            "paymentStatus"
+        );
+
+    const button =
+        document.getElementById(
+            "paymentConfirmBtn"
+        );
+
+    if(!overlay){
+        return;
+    }
+
+    item.innerText =
+        (
+            purchase.type === "book"
+            ? "📚 Book: "
+            : "🎬 Video: "
+        ) +
+        (
+            purchase.name ||
+            "EduNote item"
+        );
+
+    amount.innerText =
+        "₹" +
+        Number(
+            purchase.amount || 0
+        ).toFixed(2);
+
+    status.innerText = "";
+
+    button.disabled = false;
+
+    button.innerText =
+        "Pay Now";
+
+    overlay.classList.add(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE PAYMENT MODAL
+========================================================= */
+
+function closePaymentModal(){
+
+    const overlay =
+        document.getElementById(
+            "paymentOverlay"
+        );
+
+    if(overlay){
+
+        overlay.classList.remove(
+            "show"
+        );
+
+    }
+
+    currentPurchase =
+        null;
+
+}
+
+
+/* =========================================================
+   PAYMENT CONFIRMATION
+   FIXED TO MATCH main.py
+========================================================= */
+
+async function confirmPurchase(){
+
+    if(!currentPurchase){
+
+        return;
+
+    }
+
+    const button =
+        document.getElementById(
+            "paymentConfirmBtn"
+        );
+
+    const status =
+        document.getElementById(
+            "paymentStatus"
+        );
+
+    const method =
+        document.getElementById(
+            "paymentMethod"
+        ).value;
+
+    if(!method){
+
+        status.innerText =
+            "Please select a payment method.";
+
+        return;
+
+    }
+
+    button.disabled = true;
+
+    button.innerText =
+        "Processing...";
+
+    status.innerText =
+        "Creating your payment...";
+
+    try{
+
+        const purchase =
+            currentPurchase;
+
+
+        /*
+         * IMPORTANT:
+         *
+         * main.py /payment/create expects:
+         *
+         * amount
+         * payment_for
+         * item_id
+         * item_type
+         *
+         * Do NOT send student_id, seller_id,
+         * product_type, product_id, etc.
+         */
+
+        const createResponse =
+            await fetch(
+                "/payment/create",
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+                    },
+
+                    credentials:"include",
+
+                    body:JSON.stringify({
+
+                        amount:
+                            Number(
+                                purchase.amount
+                            ),
+
+                        payment_for:
+                            `Purchase ${purchase.type}: ${purchase.name}`,
+
+                        item_id:
+                            Number(
+                                purchase.id
+                            ),
+
+                        item_type:
+                            purchase.type === "book"
+                            ? "book"
+                            : "video"
+
+                    })
+
+                }
+            );
+
+
+        const createData =
+            await createResponse
+                .json()
+                .catch(
+                    () => ({})
+                );
+
+
+        if(!createResponse.ok){
+
+            if(
+                createResponse.status ===
+                401
+            ){
+
+                throw new Error(
+                    "Your login session has expired. Please login again."
+                );
+
+            }
+
+            throw new Error(
+                createData.detail ||
+                createData.message ||
+                "Payment could not be created."
+            );
+
+        }
+
+
+        const paymentId =
+            Number(
+                createData.payment_id
+            );
+
+
+        if(!paymentId){
+
+            throw new Error(
+                "Payment ID was not returned by the server."
+            );
+
+        }
+
+
+        status.innerText =
+            "Payment created. Confirming payment...";
+
+
+        /*
+         * main.py confirms payment using:
+         *
+         * POST /payment/{payment_id}/status
+         *
+         * Query parameters:
+         * status
+         * payment_method
+         * transaction_id
+         */
+
+        const params =
+            new URLSearchParams({
+
+                status:
+                    "Success",
+
+                payment_method:
+                    method,
+
+                transaction_id:
+                    "EDUNOTE-" +
+                    Date.now()
+
+            });
+
+
+        const statusResponse =
+            await fetch(
+                `/payment/${paymentId}/status?${params.toString()}`,
+                {
+                    method:"POST",
+
+                    credentials:"include",
+
+                    headers:{
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const statusData =
+            await statusResponse
+                .json()
+                .catch(
+                    () => ({})
+                );
+
+
+        if(!statusResponse.ok){
+
+            if(
+                statusResponse.status ===
+                401
+            ){
+
+                throw new Error(
+                    "Your login session has expired. Please login again."
+                );
+
+            }
+
+            let errorMessage = "Payment could not be created.";
+
+if (Array.isArray(createData.detail)) {
+    errorMessage = createData.detail
+        .map(error => {
+            const field =
+                Array.isArray(error.loc)
+                    ? error.loc.join(".")
+                    : "field";
+
+            return `${field}: ${error.msg || "Invalid value"}`;
+        })
+        .join(" | ");
+}
+else if (typeof createData.detail === "string") {
+    errorMessage = createData.detail;
+}
+else if (createData.message) {
+    errorMessage = createData.message;
+}
+
+throw new Error(errorMessage);
+        }
+
+
+        status.innerText =
+            `Payment successful! Payment #${paymentId}. Opening your item...`;
+
+        button.innerText =
+            "Paid ✓";
+
+
+        setTimeout(
+            () => {
+
+                const next =
+                    purchase.afterPayment;
+
+                closePaymentModal();
+
+                if(
+                    typeof next ===
+                    "function"
+                ){
+
+                    next();
+
+                }
+
+            },
+            700
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Payment error:",
+            error
+        );
+
+        status.innerText =
+            error.message ||
+            "Payment failed.";
+
+        button.disabled =
+            false;
+
+        button.innerText =
+            "Try Again";
+
+    }
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+function escapeAttribute(
+    value
+){
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        );
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+loadStats();
+
+loadBooks();
+
+loadStudentVideos();
+
+</script>
+
+</body>
+
+</html>

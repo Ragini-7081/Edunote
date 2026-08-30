@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNote — Earnings</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
+:root{--primary:#2563eb;--sidebar:#0f172a;--bg:#f1f5f9;--white:#fff;--text:#1e293b;--light:#64748b;--border:#e2e8f0;--shadow:0 8px 30px rgba(0,0,0,.08);--radius:16px;}
+body{background:var(--bg);color:var(--text);}
+.sidebar{position:fixed;left:0;top:0;width:260px;height:100vh;background:var(--sidebar);color:#fff;display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.brand{display:flex;align-items:center;gap:12px;padding:28px 24px 22px;border-bottom:1px solid #1e293b;}
+.brand-icon{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:22px;}
+.brand h2{font-size:20px;font-weight:700;} .brand p{font-size:12px;color:#94a3b8;margin-top:2px;}
+.nav-label{font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:1.2px;padding:20px 24px 8px;}
+.menu{list-style:none;padding:0 12px;}
+.menu li a{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;color:#cbd5e1;text-decoration:none;font-size:14px;font-weight:500;transition:.25s;margin-bottom:2px;}
+.menu li a:hover{background:#1e293b;color:#fff;} .menu li.active a{background:#2563eb;color:#fff;}
+.sidebar-footer{margin-top:auto;padding:20px 24px;border-top:1px solid #1e293b;}
+.sidebar-footer a{display:flex;align-items:center;gap:10px;color:#94a3b8;text-decoration:none;font-size:14px;padding:10px 12px;border-radius:10px;transition:.25s;}
+.sidebar-footer a:hover{background:#1e293b;color:#fff;}
+.main-content{margin-left:260px;min-height:100vh;}
+.topbar{background:var(--white);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.06);border-bottom:1px solid var(--border);}
+.topbar h2{font-size:20px;font-weight:600;} .topbar a{color:var(--light);text-decoration:none;font-size:14px;}
+.page{padding:28px 32px;}
+
+/* EARNINGS HERO */
+.earn-hero{
+  background:linear-gradient(135deg,#10b981,#059669);
+  border-radius:20px;padding:32px 36px;color:#fff;
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:28px;position:relative;overflow:hidden;
+}
+.earn-hero::before{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.08);}
+.earn-hero h1{font-size:40px;font-weight:700;margin-bottom:4px;}
+.earn-hero p{font-size:14px;opacity:.85;}
+.earn-badge{background:rgba(255,255,255,.2);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-top:10px;display:inline-block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:28px;}
+.s-card{background:var(--white);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;transition:.3s;}
+.s-card:hover{transform:translateY(-4px);}
+.s-card .icon{font-size:32px;margin-bottom:10px;}
+.s-card h2{font-size:26px;font-weight:700;color:var(--primary);margin-bottom:4px;}
+.s-card p{color:var(--light);font-size:13px;}
+
+/* CHARTS ROW */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:28px;}
+.chart-card{background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.chart-card h3{font-size:16px;font-weight:600;margin-bottom:20px;}
+
+/* BOOK EARNINGS TABLE */
+.table-card{background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.table-card h3{font-size:16px;font-weight:600;margin-bottom:20px;}
+.earn-table{width:100%;border-collapse:collapse;}
+.earn-table th{text-align:left;padding:10px 14px;font-size:12px;font-weight:600;color:var(--light);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);}
+.earn-table td{padding:14px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.earn-table tr:last-child td{border-bottom:none;}
+.earn-table tr:hover td{background:#f8fafc;}
+.earn-amount{font-weight:700;color:#10b981;font-size:16px;}
+
+/* NOTICE */
+.notice{background:#fefce8;border:1px solid #fde047;border-radius:12px;padding:16px 20px;font-size:13px;color:#854d0e;margin-bottom:24px;line-height:1.6;}
+
+@media(max-width:1100px){.charts-row{grid-template-columns:1fr;} .stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){
+  .sidebar{width:70px;}
+  .brand p,.brand h2,.nav-label,.menu li a span:last-child,.sidebar-footer a span:last-child{display:none;}
+  .brand{padding:20px 12px;justify-content:center;}
+  .menu li a{padding:14px;justify-content:center;}
+  .main-content{margin-left:70px;}
+  .page{padding:18px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">📚</div>
+    <div><h2>EduNote</h2><p>Author Workspace</p></div>
+  </div>
+  <span class="nav-label">Main Menu</span>
+  <ul class="menu">
+    <li><a href="/author/{{ user.id }}"><span>🏠</span><span>Dashboard</span></a></li>
+    <li><a href="/write-book?author_id={{ user.id }}"><span>✍️</span><span>Write Book</span></a></li>
+    <li><a href="/my-books?author_id={{ user.id }}"><span>📚</span><span>My Books</span></a></li>
+    <li><a href="/analytics/{{ user.id }}"><span>📊</span><span>Analytics</span></a></li>
+    <li><a href="/comments/{{ user.id }}"><span>💬</span><span>Comments</span></a></li>
+    <li class="active"><a href="/earnings/{{ user.id }}"><span>💰</span><span>Earnings</span></a></li>
+    <li><a href="/profile/{{ user.id }}"><span>👤</span><span>My Profile</span></a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <a href="/logout"><span>🚪</span><span>Logout</span></a>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <h2>💰 Earnings Overview</h2>
+    <a href="/author/{{ user.id }}">← Dashboard</a>
+  </div>
+
+  <div class="page">
+
+    <div class="notice">
+      💡 <strong>Note:</strong> Earnings data is based on book sales recorded in EduNote.
+      Real payment gateway integration (Razorpay / Stripe) can be added in the next phase.
+    </div>
+
+    <!-- HERO -->
+    <div class="earn-hero">
+      <div>
+        <p style="font-size:14px;opacity:.8;margin-bottom:6px;">Total Lifetime Earnings</p>
+        <h1>₹<span id="totalEarnings">0</span></h1>
+        <p>Based on your book sales on EduNote</p>
+        <span class="earn-badge" id="earnBadge">0 books sold</span>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:60px;">💰</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="s-card"><div class="icon">📚</div><h2 id="e-books">0</h2><p>Total Books</p></div>
+      <div class="s-card"><div class="icon">🛒</div><h2 id="e-sales">0</h2><p>Total Sales</p></div>
+      <div class="s-card"><div class="icon">📈</div><h2 id="e-avg">₹0</h2><p>Avg. per Book</p></div>
+      <div class="s-card"><div class="icon">🏆</div><h2 id="e-top">—</h2><p>Best Seller</p></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>📊 Earnings per Book</h3>
+        <canvas id="earningsChart" height="120"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>📦 Sales Distribution</h3>
+        <canvas id="salesPieChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <h3>📋 Book Earnings Breakdown</h3>
+      <table class="earn-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Book Title</th><th>Category</th>
+            <th>Price (₹)</th><th>Sales</th><th>Earnings</th>
+          </tr>
+        </thead>
+        <tbody id="earningsTableBody">
+          <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const AUTHOR_ID = {{ user.id }};
+
+async function loadEarnings() {
+  const res   = await fetch(`/author/${AUTHOR_ID}/books`);
+  const books = await res.json();
+
+  const totalSales    = books.reduce((s, b) => s + (b.sales || 0), 0);
+  const totalEarnings = books.reduce((s, b) => s + ((b.sales || 0) * (b.price || 0)), 0);
+  const avgEarnings   = books.length ? (totalEarnings / books.length).toFixed(0) : 0;
+  const topBook       = books.sort((a,b) => (b.sales||0) - (a.sales||0))[0];
+
+  document.getElementById("totalEarnings").innerText = totalEarnings.toFixed(2);
+  document.getElementById("earnBadge").innerText     = `${totalSales} book${totalSales !== 1 ? "s" : ""} sold`;
+  document.getElementById("e-books").innerText       = books.length;
+  document.getElementById("e-sales").innerText       = totalSales;
+  document.getElementById("e-avg").innerText         = "₹" + avgEarnings;
+  document.getElementById("e-top").innerText         = topBook ? topBook.title.slice(0, 14) + (topBook.title.length > 14 ? "…" : "") : "—";
+
+  // Table
+  const tbody = document.getElementById("earningsTableBody");
+  if (!books.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px;">No books found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = books.map((b, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${b.title}</strong></td>
+      <td>${b.category || "—"}</td>
+      <td>₹${b.price || 0}</td>
+      <td>${b.sales || 0}</td>
+      <td class="earn-amount">₹${((b.sales || 0) * (b.price || 0)).toFixed(2)}</td>
+    </tr>
+  `).join("");
+
+  // Earnings bar chart
+  new Chart(document.getElementById("earningsChart"), {
+    type: "bar",
+    data: {
+      labels: books.map(b => b.title.slice(0,18)),
+      datasets: [{
+        label: "Earnings (₹)",
+        data: books.map(b => ((b.sales||0) * (b.price||0)).toFixed(2)),
+        backgroundColor: "#10b981",
+        borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { callback: v => "₹"+v } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Sales pie chart
+  new Chart(document.getElementById("salesPieChart"), {
+    type: "pie",
+    data: {
+      labels: books.map(b => b.title.slice(0,14)),
+      datasets: [{
+        data: books.map(b => b.sales || 0),
+        backgroundColor: ["#2563eb","#10b981","#f59e0b","#8b5cf6","#ef4444","#0ea5e9","#ec4899","#14b8a6"],
+        borderWidth: 0, hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
+}
+
+loadEarnings();
+</script>
+</body>
+</html>

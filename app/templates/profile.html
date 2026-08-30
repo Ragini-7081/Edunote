@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNote — My Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
+:root{--primary:#2563eb;--sidebar:#0f172a;--bg:#f1f5f9;--white:#fff;--text:#1e293b;--light:#64748b;--border:#e2e8f0;--shadow:0 8px 30px rgba(0,0,0,.08);--radius:16px;}
+body{background:var(--bg);color:var(--text);}
+.sidebar{position:fixed;left:0;top:0;width:260px;height:100vh;background:var(--sidebar);color:#fff;display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.brand{display:flex;align-items:center;gap:12px;padding:28px 24px 22px;border-bottom:1px solid #1e293b;}
+.brand-icon{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:22px;}
+.brand h2{font-size:20px;font-weight:700;} .brand p{font-size:12px;color:#94a3b8;margin-top:2px;}
+.nav-label{font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:1.2px;padding:20px 24px 8px;}
+.menu{list-style:none;padding:0 12px;}
+.menu li a{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;color:#cbd5e1;text-decoration:none;font-size:14px;font-weight:500;transition:.25s;margin-bottom:2px;}
+.menu li a:hover{background:#1e293b;color:#fff;} .menu li.active a{background:#2563eb;color:#fff;}
+.sidebar-footer{margin-top:auto;padding:20px 24px;border-top:1px solid #1e293b;}
+.sidebar-footer a{display:flex;align-items:center;gap:10px;color:#94a3b8;text-decoration:none;font-size:14px;padding:10px 12px;border-radius:10px;transition:.25s;}
+.sidebar-footer a:hover{background:#1e293b;color:#fff;}
+.main-content{margin-left:260px;min-height:100vh;}
+.topbar{background:var(--white);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.06);border-bottom:1px solid var(--border);}
+.topbar h2{font-size:20px;font-weight:600;} .topbar a{color:var(--light);text-decoration:none;font-size:14px;}
+.page{padding:28px 32px;display:grid;grid-template-columns:320px 1fr;gap:28px;}
+
+/* PROFILE CARD */
+.profile-card{background:var(--white);border-radius:20px;padding:36px 28px;box-shadow:var(--shadow);text-align:center;height:fit-content;}
+.profile-avatar{
+  width:100px;height:100px;border-radius:50%;margin:0 auto 16px;
+  background:linear-gradient(135deg,#2563eb,#60a5fa);
+  display:flex;align-items:center;justify-content:center;
+  font-size:42px;color:#fff;font-weight:700;
+}
+.profile-card h2{font-size:22px;font-weight:700;margin-bottom:6px;}
+.role-badge{display:inline-block;padding:6px 18px;background:#dbeafe;color:#1d4ed8;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:16px;}
+.profile-detail{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;color:#334155;}
+.profile-detail:last-child{border-bottom:none;}
+.profile-detail span:first-child{width:24px;text-align:center;font-size:16px;}
+.profile-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px;}
+.pstat{background:#f8fafc;border-radius:12px;padding:14px;text-align:center;}
+.pstat h3{font-size:20px;font-weight:700;color:var(--primary);}
+.pstat p{font-size:11px;color:var(--light);}
+
+/* EDIT FORM */
+.form-card{background:var(--white);border-radius:20px;padding:32px;box-shadow:var(--shadow);}
+.form-card h3{font-size:20px;font-weight:600;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.form-group{display:flex;flex-direction:column;gap:8px;}
+.form-group label{font-size:13px;font-weight:600;color:#334155;}
+.form-group input,.form-group select{
+  border:1px solid var(--border);border-radius:12px;
+  padding:13px 16px;font-size:14px;outline:none;transition:.3s;
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.08);}
+.form-group input[disabled]{background:#f8fafc;cursor:not-allowed;color:var(--light);}
+.save-btn{padding:13px 32px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;transition:.25s;margin-top:8px;}
+.save-btn:hover{background:#1d4ed8;transform:translateY(-2px);}
+.success-msg{display:none;margin-top:14px;padding:12px 18px;background:#dcfce7;color:#166534;border-radius:10px;font-size:14px;font-weight:500;}
+
+@media(max-width:1000px){.page{grid-template-columns:1fr;}}
+@media(max-width:900px){
+  .sidebar{width:70px;}
+  .brand p,.brand h2,.nav-label,.menu li a span:last-child,.sidebar-footer a span:last-child{display:none;}
+  .brand{padding:20px 12px;justify-content:center;}
+  .menu li a{padding:14px;justify-content:center;}
+  .main-content{margin-left:70px;}
+  .form-row{grid-template-columns:1fr;}
+  .page{padding:18px;}
+}
+</style>
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">📚</div>
+    <div><h2>EduNote</h2><p>Author Workspace</p></div>
+  </div>
+  <span class="nav-label">Main Menu</span>
+  <ul class="menu">
+    <li><a href="/author/{{ user.id }}"><span>🏠</span><span>Dashboard</span></a></li>
+    <li><a href="/write-book?author_id={{ user.id }}"><span>✍️</span><span>Write Book</span></a></li>
+    <li><a href="/my-books?author_id={{ user.id }}"><span>📚</span><span>My Books</span></a></li>
+    <li><a href="/analytics/{{ user.id }}"><span>📊</span><span>Analytics</span></a></li>
+    <li><a href="/comments/{{ user.id }}"><span>💬</span><span>Comments</span></a></li>
+    <li><a href="/earnings/{{ user.id }}"><span>💰</span><span>Earnings</span></a></li>
+    <li class="active"><a href="/profile/{{ user.id }}"><span>👤</span><span>My Profile</span></a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <a href="/logout"><span>🚪</span><span>Logout</span></a>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <h2>👤 My Profile</h2>
+    <a href="/author/{{ user.id }}">← Dashboard</a>
+  </div>
+  <div class="page">
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+      <div class="profile-avatar" id="pAvatar">{{ user.full_name[0] | upper }}</div>
+      <h2>{{ user.full_name }}</h2>
+      <span class="role-badge">✍️ Author</span>
+      <div class="profile-detail"><span>📧</span><span>{{ user.email }}</span></div>
+      <div class="profile-detail"><span>👤</span><span>@{{ user.username }}</span></div>
+      <div class="profile-detail"><span>🗓</span><span>Member since 2025</span></div>
+      <div class="profile-stats">
+        <div class="pstat"><h3 id="p-books">—</h3><p>Books</p></div>
+        <div class="pstat"><h3 id="p-views">—</h3><p>Views</p></div>
+        <div class="pstat"><h3 id="p-likes">—</h3><p>Likes</p></div>
+      </div>
+    </div>
+
+    <!-- EDIT FORM -->
+    <div class="form-card">
+      <h3>✏️ Edit Profile</h3>
+      <form id="profileForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="f-name" value="{{ user.full_name }}">
+          </div>
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="f-username" value="{{ user.username }}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="f-email" value="{{ user.email }}" disabled>
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <input type="text" value="Author" disabled>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>New Password (leave blank to keep current)</label>
+            <input type="password" id="f-password" placeholder="Enter new password">
+          </div>
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="f-confirm" placeholder="Confirm new password">
+          </div>
+        </div>
+        <button type="submit" class="save-btn">💾 Save Changes</button>
+        <div class="success-msg" id="successMsg">✅ Profile updated successfully!</div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const AUTHOR_ID = {{ user.id }};
+
+async function loadStats() {
+  const res  = await fetch(`/author/${AUTHOR_ID}/stats`);
+  const data = await res.json();
+  document.getElementById("p-books").innerText = data.books ?? 0;
+  document.getElementById("p-views").innerText = data.views ?? 0;
+  document.getElementById("p-likes").innerText = data.likes ?? 0;
+}
+
+document.getElementById("profileForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const pw  = document.getElementById("f-password").value;
+  const c   = document.getElementById("f-confirm").value;
+  if (pw && pw !== c) { alert("Passwords do not match."); return; }
+  // In a full app: PUT /profile/:id
+  document.getElementById("successMsg").style.display = "block";
+  setTimeout(() => { document.getElementById("successMsg").style.display = "none"; }, 4000);
+});
+
+loadStats();
+</script>
+</body>
+</html>

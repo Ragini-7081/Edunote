@@ -1,0 +1,11 @@
+html {
+    min-height: 100%;
+}
+
+body {
+    background-color: #f8fbff !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)), url("/static/images/student-background.png") !important;
+    background-position: center !important;
+    background-size: cover !important;
+    background-attachment: fixed !important;
+}

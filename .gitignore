@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.env.*
+.vscode/
+*.db
+app.db
+edunote.db
+app/static/uploads/videos/
+app/static/uploads/thumbnails/

@@ -1,0 +1,1230 @@
+/* ===========================================================
+   EDUNOTE - BOOK WRITER
+   PART 1
+   Global + Navbar + Layout
+=========================================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --secondary:#0f172a;
+
+    --bg:#f4f7fb;
+
+    --white:#ffffff;
+
+    --border:#dbe3ee;
+
+    --text:#1e293b;
+
+    --light:#64748b;
+
+    --shadow:
+    0 12px 35px rgba(0,0,0,.08);
+
+    --radius:18px;
+
+}
+
+body{
+
+    font-family:"Poppins",sans-serif;
+
+    background:var(--bg);
+
+    color:var(--text);
+
+    min-height:100vh;
+
+}
+
+/* ================= Scrollbar ================= */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#b9c4d4;
+
+    border-radius:50px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:var(--primary);
+
+}
+
+/* ================= Navbar ================= */
+
+.topbar{
+
+    position:sticky;
+
+    top:0;
+
+    z-index:999;
+
+    background:white;
+
+    height:80px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 45px;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.05);
+
+}
+
+.logo{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+.logo-icon{
+
+    width:55px;
+
+    height:55px;
+
+    border-radius:16px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:26px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #60a5fa
+    );
+
+    color:white;
+
+}
+
+.logo h2{
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+.logo small{
+
+    color:var(--light);
+
+}
+
+/* ================= Buttons ================= */
+
+.top-actions{
+
+    display:flex;
+
+    gap:15px;
+
+}
+
+.draft-btn,
+.publish-btn{
+
+    border:none;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    padding:13px 24px;
+
+    border-radius:12px;
+
+    transition:.3s;
+
+}
+
+.draft-btn{
+
+    background:#eef4ff;
+
+    color:var(--primary);
+
+}
+
+.publish-btn{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.publish-btn:hover{
+
+    background:var(--primary-dark);
+
+    transform:translateY(-2px);
+
+}
+
+.draft-btn:hover{
+
+    transform:translateY(-2px);
+
+    background:#dbeafe;
+
+}
+
+/* ================= Main ================= */
+
+.container{
+
+    width:95%;
+
+    max-width:1600px;
+
+    margin:35px auto;
+
+    display:grid;
+
+    grid-template-columns:
+
+    2fr 1fr;
+
+    gap:28px;
+
+}
+
+/* ================= Cards ================= */
+
+.editor-card,
+.ai-card{
+
+    background:white;
+
+    border-radius:22px;
+
+    box-shadow:var(--shadow);
+
+    overflow:hidden;
+
+}
+
+/* ================= Editor ================= */
+
+.editor-card{
+
+    padding:35px;
+
+}
+
+.section-title{
+
+    margin-bottom:30px;
+
+}
+
+.section-title h2{
+
+    font-size:32px;
+
+    margin-bottom:8px;
+
+}
+
+.section-title p{
+
+    color:var(--light);
+
+    font-size:15px;
+
+}
+
+/* ================= Form ================= */
+
+.field{
+
+    display:flex;
+
+    flex-direction:column;
+
+    margin-bottom:22px;
+
+}
+
+.field label{
+
+    margin-bottom:10px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    color:#334155;
+
+}
+
+.title{
+
+    font-size:28px;
+
+    font-weight:700;
+
+    border:none;
+
+    border-bottom:2px solid var(--border);
+
+    padding:15px 0;
+
+    outline:none;
+
+    transition:.3s;
+
+}
+
+.title:focus{
+
+    border-color:var(--primary);
+
+}
+
+.meta{
+
+    display:grid;
+
+    grid-template-columns:
+
+    repeat(2,1fr);
+
+    gap:18px;
+
+}
+
+select,
+input[type="number"],
+textarea{
+
+    width:100%;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:14px;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.3s;
+
+    background:white;
+
+}
+
+select:focus,
+input:focus,
+textarea:focus{
+
+    border-color:var(--primary);
+
+    box-shadow:
+
+    0 0 0 4px rgba(37,99,235,.08);
+
+}
+
+textarea{
+
+    resize:none;
+
+}
+
+/* ================= Upload ================= */
+
+.cover-upload{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.upload-btn{
+
+    background:var(--primary);
+
+    color:white;
+
+    padding:12px 22px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    font-size:15px;
+
+    font-weight:500;
+
+}
+
+.upload-btn:hover{
+
+    background:var(--primary-dark);
+
+}
+
+#cover-name{
+
+    color:var(--light);
+
+    font-size:14px;
+
+}
+
+/* ===========================================================
+   EDUNOTE BOOK WRITER
+   PART 2
+   Editor + AI Panel
+===========================================================*/
+
+
+/* ===========================
+        QUILL EDITOR
+=========================== */
+
+#editor{
+
+    height:650px;
+
+    background:#fff;
+
+    border:1px solid var(--border);
+
+    border-radius:0 0 18px 18px;
+
+    overflow-y:auto;
+
+    font-size:17px;
+
+    line-height:1.8;
+
+}
+
+.ql-toolbar.ql-snow{
+
+    border:1px solid var(--border);
+
+    border-bottom:none;
+
+    border-radius:18px 18px 0 0;
+
+    background:#f8fafc;
+
+    padding:15px;
+
+}
+
+.ql-container.ql-snow{
+
+    border:none !important;
+
+    font-family:"Poppins",sans-serif;
+
+    font-size:17px;
+
+}
+
+.ql-editor{
+
+    min-height:600px;
+
+    padding:30px;
+
+    color:#222;
+
+}
+
+.ql-editor p{
+
+    margin-bottom:18px;
+
+}
+
+.ql-editor:focus{
+
+    outline:none;
+
+}
+
+
+/* ===========================
+        AI PANEL
+=========================== */
+
+.ai-card{
+
+    display:flex;
+
+    flex-direction:column;
+
+    height:900px;
+
+}
+
+.ai-header{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding:25px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #3b82f6
+    );
+
+    color:white;
+
+}
+
+.ai-avatar{
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:50%;
+
+    background:white;
+
+    color:#2563eb;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:30px;
+
+}
+
+.ai-header h2{
+
+    font-size:22px;
+
+}
+
+.ai-header p{
+
+    font-size:14px;
+
+    opacity:.9;
+
+}
+
+
+/* ===========================
+        QUICK BUTTONS
+=========================== */
+
+.quick-actions{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:12px;
+
+    padding:20px;
+
+}
+
+.quick-btn{
+
+    border:none;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:#eef4ff;
+
+    color:#2563eb;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.quick-btn:hover{
+
+    background:#2563eb;
+
+    color:white;
+
+    transform:translateY(-3px);
+
+}
+
+
+/* ===========================
+        CHAT BOX
+=========================== */
+
+.chat-box{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    padding:20px;
+
+    background:#f8fafc;
+
+}
+
+.chat-box::-webkit-scrollbar{
+
+    width:6px;
+
+}
+
+.chat-box::-webkit-scrollbar-thumb{
+
+    background:#cbd5e1;
+
+    border-radius:20px;
+
+}
+
+
+/* AI MESSAGE */
+
+.ai-message{
+
+    background:white;
+
+    border-radius:16px;
+
+    padding:18px;
+
+    margin-bottom:15px;
+
+    box-shadow:0 6px 20px rgba(0,0,0,.05);
+
+    line-height:1.7;
+
+}
+
+.ai-message ul{
+
+    margin-top:12px;
+
+    margin-left:20px;
+
+}
+
+.ai-message li{
+
+    margin-bottom:8px;
+
+}
+
+
+/* USER MESSAGE */
+
+.user-message{
+
+    background:#2563eb;
+
+    color:white;
+
+    padding:15px;
+
+    border-radius:16px;
+
+    margin:15px 0;
+
+    margin-left:auto;
+
+    max-width:80%;
+
+}
+
+
+/* ===========================
+        CHAT INPUT
+=========================== */
+
+.chat-input{
+
+    display:flex;
+
+    gap:12px;
+
+    padding:20px;
+
+    border-top:1px solid #e2e8f0;
+
+    background:white;
+
+}
+
+#ai-message{
+
+    flex:1;
+
+    height:60px;
+
+    resize:none;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:15px;
+
+    font-size:15px;
+
+    font-family:"Poppins",sans-serif;
+
+}
+
+#send-ai{
+
+    width:120px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#2563eb;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+#send-ai:hover{
+
+    background:#1d4ed8;
+
+    transform:translateY(-2px);
+
+}
+
+
+/* ===========================
+        FOOTER
+=========================== */
+
+.footer{
+
+    margin:40px 0;
+
+    text-align:center;
+
+    color:#64748b;
+
+    font-size:14px;
+
+}
+/* ==========================================================
+   EDUNOTE BOOK WRITER
+   PART 3
+   Premium Effects + Responsive + Animations
+========================================================== */
+
+
+/* ===========================
+      Card Hover Effects
+=========================== */
+
+.editor-card,
+.ai-card{
+
+    transition:.35s ease;
+
+}
+
+.editor-card:hover,
+.ai-card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:
+    0 18px 45px rgba(0,0,0,.12);
+
+}
+
+
+/* ===========================
+        Inputs
+=========================== */
+
+input,
+textarea,
+select{
+
+    transition:
+    .3s ease;
+
+}
+
+input:hover,
+textarea:hover,
+select:hover{
+
+    border-color:#93c5fd;
+
+}
+
+.title{
+
+    letter-spacing:.3px;
+
+}
+
+
+/* ===========================
+       Upload Button
+=========================== */
+
+.upload-btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:170px;
+
+}
+
+.upload-btn:active{
+
+    transform:scale(.97);
+
+}
+
+
+/* ===========================
+       AI Buttons
+=========================== */
+
+.quick-btn{
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.quick-btn::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:-100%;
+
+    top:0;
+
+    width:100%;
+
+    height:100%;
+
+    background:
+
+    rgba(255,255,255,.25);
+
+    transition:.5s;
+
+}
+
+.quick-btn:hover::after{
+
+    left:100%;
+
+}
+
+
+/* ===========================
+       Send Button
+=========================== */
+
+#send-ai{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+#send-ai:active{
+
+    transform:scale(.96);
+
+}
+
+
+/* ===========================
+      Chat Animation
+=========================== */
+
+.ai-message,
+.user-message{
+
+    animation:fadeUp .35s ease;
+
+}
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(15px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+
+/* ===========================
+      Editor Animation
+=========================== */
+
+.editor-card{
+
+    animation:slideLeft .5s ease;
+
+}
+
+.ai-card{
+
+    animation:slideRight .5s ease;
+
+}
+
+@keyframes slideLeft{
+
+    from{
+
+        opacity:0;
+
+        transform:translateX(-35px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateX(0);
+
+    }
+
+}
+
+@keyframes slideRight{
+
+    from{
+
+        opacity:0;
+
+        transform:translateX(35px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateX(0);
+
+    }
+
+}
+
+
+/* ===========================
+        Focus Glow
+=========================== */
+
+.title:focus,
+textarea:focus,
+input:focus,
+select:focus{
+
+    box-shadow:
+
+    0 0 0 5px rgba(37,99,235,.12);
+
+}
+
+
+/* ===========================
+       Footer
+=========================== */
+
+.footer{
+
+    padding:20px;
+
+    border-top:1px solid #e5e7eb;
+
+}
+
+
+/* ===========================
+       Responsive
+=========================== */
+
+@media(max-width:1300px){
+
+.container{
+
+    grid-template-columns:1fr;
+
+}
+
+.ai-card{
+
+    height:700px;
+
+}
+
+#editor{
+
+    height:500px;
+
+}
+
+}
+
+
+@media(max-width:900px){
+
+.topbar{
+
+    flex-direction:column;
+
+    gap:15px;
+
+    height:auto;
+
+    padding:20px;
+
+}
+
+.top-actions{
+
+    width:100%;
+
+}
+
+.top-actions button{
+
+    flex:1;
+
+}
+
+.meta{
+
+    grid-template-columns:1fr;
+
+}
+
+#editor{
+
+    height:400px;
+
+}
+
+.quick-actions{
+
+    grid-template-columns:1fr;
+
+}
+
+.chat-input{
+
+    flex-direction:column;
+
+}
+
+#send-ai{
+
+    width:100%;
+
+    height:50px;
+
+}
+
+}
+
+
+@media(max-width:600px){
+
+.logo h2{
+
+    font-size:20px;
+
+}
+
+.section-title h2{
+
+    font-size:24px;
+
+}
+
+.title{
+
+    font-size:24px;
+
+}
+
+.editor-card{
+
+    padding:20px;
+
+}
+
+.ai-header{
+
+    padding:18px;
+
+}
+
+.ai-avatar{
+
+    width:50px;
+
+    height:50px;
+
+    font-size:24px;
+
+}
+
+#editor{
+
+    height:350px;
+
+}
+
+}
+
+/* ===========================
+   AI MESSAGE STRUCTURE
+=========================== */
+
+.ai-message {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ai-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.ai-text {
+    background: white;
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.06);
+    font-size: 14px;
+    line-height: 1.75;
+    color: #1e293b;
+}
+
+.user-message {
+    background: #2563eb;
+    color: white;
+    padding: 13px 18px;
+    border-radius: 14px;
+    margin: 10px 0 10px auto;
+    max-width: 82%;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: fadeUp .3s ease;
+}
+
+/* Typing dots */
+.dots span {
+    animation: blink 1.2s infinite;
+    font-size: 22px;
+    line-height: 1;
+    color: #94a3b8;
+}
+.dots span:nth-child(2) { animation-delay: .2s; }
+.dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes blink {
+    0%, 80%, 100% { opacity: 0; }
+    40%            { opacity: 1; }
+}

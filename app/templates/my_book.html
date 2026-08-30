@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNote — My Books</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
+:root{--primary:#2563eb;--primary-dark:#1d4ed8;--bg:#f1f5f9;--white:#fff;--text:#1e293b;--light:#64748b;--border:#e2e8f0;--shadow:0 8px 30px rgba(0,0,0,.08);--radius:16px;}
+body{background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--white);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.06);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px;}
+.logo-wrap{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo-wrap h2{font-size:19px;font-weight:700;color:var(--primary);}
+.logo-wrap p{font-size:12px;color:var(--light);}
+.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+#search-book{width:240px;padding:10px 14px;border:1px solid var(--border);border-radius:12px;outline:none;font-size:13px;transition:.3s;}
+#search-book:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+.btn-primary{padding:10px 18px;background:var(--primary);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:600;font-size:13px;transition:.25s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);}
+.btn-secondary{padding:10px 18px;background:#eef4ff;color:var(--primary);border:none;border-radius:12px;cursor:pointer;font-weight:600;font-size:13px;transition:.25s;}
+.btn-secondary:hover{background:#dbeafe;}
+.back-link{color:var(--light);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:4px;padding:8px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--border);}
+.back-link:hover{color:var(--primary);background:#eef4ff;}
+
+/* PAGE HEADER */
+.page-header{padding:28px 40px 14px;}
+.page-header h1{font-size:28px;font-weight:700;margin-bottom:6px;}
+.page-header p{color:var(--light);font-size:14px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:0 40px 22px;}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;transition:.3s;}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-card h2{font-size:30px;font-weight:700;color:var(--primary);margin-bottom:5px;}
+.stat-card p{color:var(--light);font-size:13px;}
+
+/* FILTERS */
+.filters-wrap{padding:0 40px 22px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.filters-wrap span{font-size:13px;font-weight:600;color:var(--light);margin-right:4px;}
+.filter{padding:8px 16px;border:none;border-radius:30px;cursor:pointer;font-weight:600;font-size:12px;color:#334155;background:var(--white);box-shadow:0 3px 10px rgba(0,0,0,.05);transition:.25s;}
+.filter.active,.filter:hover{background:var(--primary);color:#fff;}
+
+/* GRID */
+.books-grid{padding:0 40px 50px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;}
+.book-card{background:var(--white);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);transition:.32s;border:1px solid var(--border);}
+.book-card:hover{transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,.12);}
+.book-cover{height:170px;display:flex;align-items:center;justify-content:center;font-size:62px;position:relative;}
+.cover-0{background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+.cover-1{background:linear-gradient(135deg,#dcfce7,#bbf7d0);}
+.cover-2{background:linear-gradient(135deg,#fef3c7,#fde68a);}
+.cover-3{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);}
+.cover-4{background:linear-gradient(135deg,#fee2e2,#fecaca);}
+.cover-5{background:linear-gradient(135deg,#e0f2fe,#bae6fd);}
+.cover-6{background:linear-gradient(135deg,#fce7f3,#fbcfe8);}
+.cover-7{background:linear-gradient(135deg,#d1fae5,#a7f3d0);}
+.status-tag{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+.s-pub{background:#dcfce7;color:#166534;}
+.s-draft{background:#fef3c7;color:#92400e;}
+.book-body{padding:18px;}
+.book-body h3{font-size:16px;font-weight:700;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.book-desc{color:var(--light);font-size:12px;line-height:1.55;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--light);margin-bottom:10px;}
+.book-stats{display:flex;gap:12px;font-size:12px;color:#475569;margin-bottom:14px;}
+.card-actions{display:flex;gap:8px;}
+.card-actions button{flex:1;padding:9px 6px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:11px;transition:.25s;}
+.btn-view{background:#dbeafe;color:#1d4ed8;}
+.btn-edit{background:#e0f2fe;color:#0369a1;}
+.btn-del{background:#fee2e2;color:#b91c1c;}
+.card-actions button:hover{transform:translateY(-1px);}
+
+/* EMPTY STATE */
+.empty-wrap{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--light);}
+.empty-wrap .ei{font-size:64px;margin-bottom:16px;}
+.empty-wrap h3{font-size:20px;font-weight:600;color:var(--text);margin-bottom:10px;}
+.empty-wrap p{margin-bottom:20px;}
+.empty-wrap a{display:inline-block;padding:12px 28px;background:var(--primary);color:#fff;border-radius:12px;font-weight:600;text-decoration:none;transition:.25s;}
+.empty-wrap a:hover{background:var(--primary-dark);}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:300;align-items:center;justify-content:center;}
+.modal.open{display:flex;}
+.modal-box{width:90%;max-width:500px;background:var(--white);border-radius:24px;padding:30px;box-shadow:0 30px 70px rgba(0,0,0,.25);position:relative;}
+.modal-close{position:absolute;right:16px;top:12px;font-size:26px;cursor:pointer;color:var(--light);border:none;background:none;}
+.modal-box h2{font-size:20px;font-weight:700;margin-bottom:20px;}
+.form-col{display:flex;flex-direction:column;gap:12px;}
+.form-col input,.form-col textarea,.form-col select{border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:13px;outline:none;font-family:"Poppins",sans-serif;transition:.3s;}
+.form-col input:focus,.form-col textarea:focus,.form-col select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+.form-col textarea{resize:none;height:70px;}
+.form-col label{font-size:12px;font-weight:600;color:#334155;margin-top:4px;}
+.upload-submit{margin-top:4px;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:.25s;}
+.upload-submit:hover{background:var(--primary-dark);}
+
+/* TOAST */
+#_toast{position:fixed;bottom:26px;right:26px;z-index:9999;padding:13px 22px;border-radius:12px;background:#10b981;color:#fff;font-weight:600;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.15);transition:all .4s;opacity:0;transform:translateY(12px);}
+
+/* RESPONSIVE */
+@media(max-width:1000px){.stats-row{grid-template-columns:repeat(2,1fr);}  .topbar{padding:14px 20px;} .page-header,.stats-row,.filters-wrap,.books-grid{padding-left:20px;padding-right:20px;}}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr;} .card-actions{flex-wrap:wrap;} #search-book{width:100%;}}
+</style>
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-icon">📚</div>
+    <div><h2>EduNote</h2><p>My Books</p></div>
+  </div>
+  <div class="top-actions">
+    <a href="#" id="backDashboard" class="back-link">← Dashboard</a>
+    <input type="text" id="search-book" placeholder="🔍 Search books...">
+    <a id="writeBookLink" href="#" class="btn-primary">✍️ Write New Book</a>
+    <button class="btn-secondary" id="uploadBtn">📁 Upload</button>
+  </div>
+</header>
+
+<section class="page-header">
+  <h1>📚 My Books</h1>
+  <p>All your drafts and published books in one place.</p>
+</section>
+
+<section class="stats-row">
+  <div class="stat-card"><h2 id="total-books">0</h2><p>Total Books</p></div>
+  <div class="stat-card"><h2 id="total-published">0</h2><p>Published</p></div>
+  <div class="stat-card"><h2 id="total-drafts">0</h2><p>Drafts</p></div>
+  <div class="stat-card"><h2 id="total-views">0</h2><p>Total Views</p></div>
+</section>
+
+<div class="filters-wrap">
+  <span>Filter:</span>
+  <button class="filter active" data-filter="all">All</button>
+  <button class="filter" data-filter="Draft">📝 Drafts</button>
+  <button class="filter" data-filter="Published">✅ Published</button>
+  <button class="filter" data-filter="Education">Education</button>
+  <button class="filter" data-filter="Story">Story</button>
+  <button class="filter" data-filter="Politics">Politics</button>
+  <button class="filter" data-filter="Programming">Programming</button>
+  <button class="filter" data-filter="Science">Science</button>
+  <button class="filter" data-filter="Business">Business</button>
+</div>
+
+<section id="books-container" class="books-grid">
+  <div class="empty-wrap"><div class="ei">⏳</div><h3>Loading your books...</h3></div>
+</section>
+
+<!-- UPLOAD MODAL -->
+<div class="modal" id="uploadModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeModal">&times;</button>
+    <h2>📁 Upload Existing Book</h2>
+    <form id="uploadForm" class="form-col">
+      <input type="text" id="up-title" placeholder="Book Title *" required>
+      <textarea id="up-desc" placeholder="Short description..."></textarea>
+      <select id="up-category">
+        <option value="">Choose Category</option>
+        <optgroup label="📚 Education"><option>Education</option><option>Self Help</option><option>Academic</option></optgroup>
+        <optgroup label="📖 Literature"><option>Story</option><option>Novel</option><option>Poetry</option><option>Biography</option><option>History</option></optgroup>
+        <optgroup label="🌍 General"><option>Politics</option><option>Economics</option><option>Philosophy</option><option>Religion</option><option>Health &amp; Fitness</option><option>Science</option><option>Business</option></optgroup>
+        <optgroup label="💻 Technology"><option>Programming</option><option>Python</option><option>JavaScript</option><option>Artificial Intelligence</option><option>Machine Learning</option><option>Data Science</option><option>Web Development</option></optgroup>
+        <optgroup label="🎨 Other"><option>Art &amp; Design</option><option>Sports</option><option>Cooking</option><option>Other</option></optgroup>
+      </select>
+      <input type="number" id="up-price" placeholder="Price (₹) — 0 for free">
+      <label>Cover Image (optional)</label>
+      <input type="file" id="up-cover" accept="image/*">
+      <label>Book File (optional)</label>
+      <input type="file" id="up-file" accept=".pdf,.doc,.docx,.epub,.txt">
+      <button type="submit" class="upload-submit">📤 Upload Book</button>
+    </form>
+  </div>
+</div>
+
+<div id="_toast"></div>
+
+<script>
+// ---- GET AUTHOR ID (server-injected OR URL param) ----
+const SERVER_AUTHOR_ID = {{ author_id }};
+function getAuthorId() {
+    if (SERVER_AUTHOR_ID && SERVER_AUTHOR_ID > 0) return SERVER_AUTHOR_ID;
+    const p = new URLSearchParams(window.location.search);
+    return parseInt(p.get("author_id")) || 0;
+}
+const AUTHOR_ID = getAuthorId();
+
+// Set dynamic links
+document.getElementById("backDashboard").href = AUTHOR_ID ? `/author/${AUTHOR_ID}` : "/";
+const wbl = document.getElementById("writeBookLink");
+if (wbl) {
+    wbl.href = AUTHOR_ID ? `/write-book?author_id=${AUTHOR_ID}` : "/write-book";
+    wbl.onclick = () => sessionStorage.setItem("edunote_author_id", AUTHOR_ID);
+}
+
+// Modal
+const modal = document.getElementById("uploadModal");
+document.getElementById("uploadBtn").onclick  = () => modal.classList.add("open");
+document.getElementById("closeModal").onclick = () => modal.classList.remove("open");
+modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("open"); });
+
+const COVERS  = ["cover-0","cover-1","cover-2","cover-3","cover-4","cover-5","cover-6","cover-7"];
+const EMOJIS  = ["📘","📗","📕","📙","📔","📒","📓","📖"];
+let allBooks  = [];
+let activeFilter = "all";
+
+// ============================
+// LOAD BOOKS
+// ============================
+async function loadBooks() {
+    try {
+        const url = AUTHOR_ID > 0 ? `/author/${AUTHOR_ID}/books` : `/books`;
+        console.log("[MyBooks] Fetching from:", url);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        allBooks = await res.json();
+        console.log("[MyBooks] Got", allBooks.length, "books");
+        applyFilter(activeFilter);
+        updateStats(allBooks);
+    } catch(e) {
+        console.error("[MyBooks] Load error:", e);
+        document.getElementById("books-container").innerHTML =
+            `<div class="empty-wrap"><div class="ei">⚠️</div><h3>Could not load books</h3><p>${e.message}</p></div>`;
+    }
+}
+
+// ============================
+// RENDER BOOKS
+// ============================
+function renderBooks(list) {
+    const container = document.getElementById("books-container");
+    if (!list.length) {
+        const isFiltered = activeFilter !== "all";
+        container.innerHTML = `
+          <div class="empty-wrap">
+            <div class="ei">${isFiltered ? "🔍" : "📝"}</div>
+            <h3>${isFiltered ? "No books match this filter" : "No books yet"}</h3>
+            <p>${isFiltered ? "Try a different filter or write a new book." : "Click 'Write New Book' to start your first book!"}</p>
+            ${!isFiltered ? `<a href="/write-book?author_id=${AUTHOR_ID}">✍️ Write Your First Book</a>` : ""}
+          </div>`;
+        return;
+    }
+
+    container.innerHTML = list.map((b, i) => {
+        const cover = COVERS[i % COVERS.length];
+        const emoji = EMOJIS[i % EMOJIS.length];
+        const isPub = b.status === "Published";
+        const created = b.created_at ? new Date(b.created_at).toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"}) : "";
+        return `
+          <div class="book-card">
+            <div class="book-cover ${cover}">
+              <span>${emoji}</span>
+              <span class="status-tag ${isPub ? "s-pub" : "s-draft"}">${b.status}</span>
+            </div>
+            <div class="book-body">
+              <h3 title="${b.title}">${b.title}</h3>
+              <p class="book-desc">${b.description || "No description provided."}</p>
+              <div class="book-meta">
+                <span>🏷 ${b.category || "General"}</span>
+                <span>₹${b.price || 0} • ${created}</span>
+              </div>
+              <div class="book-stats">
+                <span>👁 ${b.views || 0}</span>
+                <span>❤️ ${b.likes || 0}</span>
+                <span>💬 ${b.comments || 0}</span>
+                <span>🛒 ${b.sales || 0}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-view" onclick="viewBook(${b.id})">👁 View</button>
+                <button class="btn-edit" onclick="editBook(${b.id})">✏️ Edit</button>
+                <button class="btn-del"  onclick="deleteBook(${b.id}, this)">🗑 Delete</button>
+              </div>
+            </div>
+          </div>`;
+    }).join("");
+}
+
+// ============================
+// STATS
+// ============================
+function updateStats(list) {
+    document.getElementById("total-books").innerText     = list.length;
+    document.getElementById("total-published").innerText = list.filter(b => b.status === "Published").length;
+    document.getElementById("total-drafts").innerText    = list.filter(b => b.status === "Draft").length;
+    document.getElementById("total-views").innerText     = list.reduce((s, b) => s + (b.views || 0), 0);
+}
+
+// ============================
+// FILTER
+// ============================
+function applyFilter(f) {
+    activeFilter = f;
+    let filtered = allBooks;
+    if (f === "Draft")      filtered = allBooks.filter(b => b.status === "Draft");
+    else if (f === "Published") filtered = allBooks.filter(b => b.status === "Published");
+    else if (f !== "all")   filtered = allBooks.filter(b => b.category === f);
+    renderBooks(filtered);
+}
+
+document.querySelectorAll(".filter").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        applyFilter(btn.dataset.filter);
+    });
+});
+
+// ============================
+// SEARCH
+// ============================
+document.getElementById("search-book").addEventListener("input", function() {
+    const q = this.value.toLowerCase().trim();
+    if (!q) { applyFilter(activeFilter); return; }
+    const results = allBooks.filter(b =>
+        b.title.toLowerCase().includes(q) ||
+        (b.description || "").toLowerCase().includes(q) ||
+        (b.category || "").toLowerCase().includes(q)
+    );
+    renderBooks(results);
+});
+
+// ============================
+// ACTIONS
+// ============================
+function viewBook(id) { location.href = `/read/${id}?user_id=${AUTHOR_ID}`; }
+function editBook(id) { location.href = `/write-book?author_id=${AUTHOR_ID}&book_id=${id}`; }
+
+async function deleteBook(id, btn) {
+    if (!confirm("Permanently delete this book?")) return;
+    const originalText = btn.innerText;
+    btn.innerText = "...";
+    btn.disabled  = true;
+    try {
+        const res  = await fetch(`/book/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.success) {
+            showToast("✅ Book deleted successfully.");
+            await loadBooks();
+        } else {
+            showToast("❌ Could not delete.", "error");
+        }
+    } catch(e) {
+        showToast("❌ Network error.", "error");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled  = false;
+    }
+}
+
+// ============================
+// UPLOAD FORM
+// ============================
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append("title",       document.getElementById("up-title").value.trim());
+    fd.append("description", document.getElementById("up-desc").value.trim());
+    fd.append("category",    document.getElementById("up-category").value);
+    fd.append("price",       document.getElementById("up-price").value || 0);
+    fd.append("author_id",   AUTHOR_ID);
+    const coverFile = document.getElementById("up-cover").files[0];
+    const bookFile  = document.getElementById("up-file").files[0];
+    if (coverFile) fd.append("cover",     coverFile);
+    if (bookFile)  fd.append("book_file", bookFile);
+
+    const submitBtn = this.querySelector(".upload-submit");
+    submitBtn.innerText = "Uploading...";
+    submitBtn.disabled  = true;
+
+    try {
+        const res  = await fetch("/upload-book", { method: "POST", body: fd });
+        const data = await res.json();
+        showToast(data.success ? "✅ " + data.message : "❌ Upload failed.");
+        if (data.success) { modal.classList.remove("open"); this.reset(); loadBooks(); }
+    } catch(e) {
+        showToast("❌ Network error during upload.", "error");
+    } finally {
+        submitBtn.innerText = "📤 Upload Book";
+        submitBtn.disabled  = false;
+    }
+});
+
+// ============================
+// TOAST
+// ============================
+function showToast(msg, type = "success") {
+    const t = document.getElementById("_toast");
+    t.innerText = msg;
+    t.style.background = type === "success" ? "#10b981" : "#ef4444";
+    t.style.opacity = "1";
+    t.style.transform = "translateY(0)";
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => {
+        t.style.opacity = "0";
+        t.style.transform = "translateY(12px)";
+    }, 3500);
+}
+
+// ============================
+// INIT
+// ============================
+loadBooks();
+</script>
+</body>
+</html>

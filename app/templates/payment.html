@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EduNote - Payment</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f5f7ff,
+                    #eef2ff
+                );
+
+            min-height: 100vh;
+
+            color: #1f2937;
+        }
+
+        .topbar {
+            height: 70px;
+
+            background: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 35px;
+
+            box-shadow:
+                0 2px 10px
+                rgba(0, 0, 0, 0.08);
+        }
+
+        .brand {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 42px;
+
+            height: 42px;
+
+            border-radius: 12px;
+
+            background: #4f46e5;
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 21px;
+        }
+
+        .brand h2 {
+            font-size: 21px;
+        }
+
+        .brand span {
+            display: block;
+
+            font-size: 12px;
+
+            color: #6b7280;
+
+            margin-top: 2px;
+        }
+
+        .back-btn {
+            border: none;
+
+            background: #f3f4f6;
+
+            padding: 10px 16px;
+
+            border-radius: 9px;
+
+            cursor: pointer;
+
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .page {
+            width: 100%;
+
+            max-width: 900px;
+
+            margin: 40px auto;
+
+            padding: 0 20px;
+        }
+
+        .payment-card {
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 35px;
+
+            box-shadow:
+                0 15px 40px
+                rgba(0, 0, 0, 0.08);
+        }
+
+        .heading {
+            text-align: center;
+
+            margin-bottom: 30px;
+        }
+
+        .heading h1 {
+            font-size: 30px;
+
+            margin-bottom: 8px;
+        }
+
+        .heading p {
+            color: #6b7280;
+        }
+
+        .book-box {
+            background: #f8fafc;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 15px;
+
+            padding: 22px;
+
+            margin-bottom: 25px;
+        }
+
+        .book-box h2 {
+            font-size: 22px;
+
+            margin-bottom: 8px;
+        }
+
+        .book-description {
+            color: #6b7280;
+
+            line-height: 1.6;
+
+            margin-bottom: 15px;
+        }
+
+        .price {
+            font-size: 28px;
+
+            font-weight: 800;
+
+            color: #4f46e5;
+        }
+
+        .payment-title {
+            font-size: 19px;
+
+            margin-bottom: 15px;
+        }
+
+        .method {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            border: 1px solid #e5e7eb;
+
+            padding: 15px;
+
+            border-radius: 12px;
+
+            margin-bottom: 12px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .method:hover {
+            border-color: #4f46e5;
+
+            background: #f8f7ff;
+        }
+
+        .method.selected {
+            border-color: #4f46e5;
+
+            background: #f8f7ff;
+
+            box-shadow:
+                0 0 0 2px
+                rgba(79, 70, 229, 0.08);
+        }
+
+        .demo-qr-panel {
+            display: none;
+            align-items: center;
+            gap: 18px;
+            margin: -2px 0 14px;
+            padding: 16px;
+            border: 1px dashed #818cf8;
+            border-radius: 12px;
+            background: #f8f7ff;
+        }
+
+        .demo-qr-panel.visible {
+            display: flex;
+        }
+
+        .demo-qr {
+            width: 104px;
+            height: 104px;
+            flex: 0 0 104px;
+            border: 7px solid white;
+            background-color: white;
+            background-image:
+                linear-gradient(90deg, #1f2937 25%, transparent 25%, transparent 75%, #1f2937 75%),
+                linear-gradient(#1f2937 25%, transparent 25%, transparent 75%, #1f2937 75%);
+            background-size: 16px 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .demo-qr-panel strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .demo-qr-panel p {
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .method input {
+            width: 18px;
+
+            height: 18px;
+
+            cursor: pointer;
+        }
+
+        .method strong {
+            display: block;
+
+            margin-bottom: 3px;
+        }
+
+        .method small {
+            color: #6b7280;
+        }
+
+        .pay-btn {
+            width: 100%;
+
+            border: none;
+
+            background: #4f46e5;
+
+            color: white;
+
+            padding: 16px;
+
+            border-radius: 12px;
+
+            font-size: 17px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            margin-top: 20px;
+
+            transition: 0.2s;
+        }
+
+        .pay-btn:hover {
+            background: #4338ca;
+        }
+
+        .pay-btn:disabled {
+            background: #9ca3af;
+
+            cursor: not-allowed;
+        }
+
+        .secure {
+            text-align: center;
+
+            margin-top: 18px;
+
+            color: #6b7280;
+
+            font-size: 13px;
+        }
+
+        .message {
+            display: none;
+
+            padding: 13px 15px;
+
+            border-radius: 10px;
+
+            margin-top: 15px;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+        }
+
+        .message.error {
+            display: block;
+
+            background: #fef2f2;
+
+            color: #b91c1c;
+
+            border: 1px solid #fecaca;
+        }
+
+        .message.success {
+            display: block;
+
+            background: #f0fdf4;
+
+            color: #15803d;
+
+            border: 1px solid #bbf7d0;
+        }
+
+        .loading {
+            display: none;
+
+            text-align: center;
+
+            margin-top: 15px;
+
+            color: #4f46e5;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+        @media(max-width: 650px) {
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .brand span {
+                display: none;
+            }
+
+            .payment-card {
+                padding: 22px;
+            }
+
+            .heading h1 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="/static/student-theme.css">
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            📚
+        </div>
+
+        <div>
+
+            <h2>
+                EduNote
+            </h2>
+
+            <span>
+                Secure Book Purchase
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <button
+        class="back-btn"
+        onclick="history.back()"
+    >
+        ← Back
+    </button>
+
+</header>
+
+
+
+<main class="page">
+
+    <div class="payment-card">
+
+
+        <div class="heading">
+
+            <h1>
+                Complete Your Purchase
+            </h1>
+
+            <p>
+                Get instant access to this book after payment.
+            </p>
+
+        </div>
+
+
+
+        <div class="book-box">
+
+            <h2>
+                {{ book.title }}
+            </h2>
+
+            <p class="book-description">
+
+                {{ book.description or
+                "Premium educational content from EduNote." }}
+
+            </p>
+
+            <div class="price">
+
+                ₹{{ "%.2f"|format(book.price or 0) }}
+
+            </div>
+
+        </div>
+
+
+
+        <h3 class="payment-title">
+            Select Payment Method
+        </h3>
+
+
+
+        <form
+            id="paymentForm"
+        >
+
+
+            <label class="method">
+
+                <input
+                    type="radio"
+                    name="payment_method"
+                    value="UPI"
+                    required
+                >
+
+                <div>
+
+                    <strong>
+                        📱 UPI
+                    </strong>
+
+                    <small>
+                        Google Pay, PhonePe, Paytm, etc.
+                    </small>
+
+                </div>
+
+            </label>
+
+            <label class="method">
+
+                <input
+                    type="radio"
+                    name="payment_method"
+                    value="Demo QR Scan"
+                >
+
+                <div>
+
+                    <strong>
+                        📷 Scan Demo QR
+                    </strong>
+
+                    <small>
+                        Practice payment screen — no real payment is made
+                    </small>
+
+                </div>
+
+            </label>
+
+            <div class="demo-qr-panel" id="demoQrPanel" aria-live="polite">
+                <div class="demo-qr" aria-label="Demo QR code"></div>
+                <div>
+                    <strong>Demo payment scanner</strong>
+                    <p>This is a visual practice QR code. Select this method, then use the normal Pay button to continue the existing demo checkout.</p>
+                </div>
+            </div>
+
+
+
+            <label class="method">
+
+                <input
+                    type="radio"
+                    name="payment_method"
+                    value="Card"
+                >
+
+                <div>
+
+                    <strong>
+                        💳 Debit / Credit Card
+                    </strong>
+
+                    <small>
+                        Visa, Mastercard and other cards
+                    </small>
+
+                </div>
+
+            </label>
+
+
+
+            <label class="method">
+
+                <input
+                    type="radio"
+                    name="payment_method"
+                    value="Net Banking"
+                >
+
+                <div>
+
+                    <strong>
+                        🏦 Net Banking
+                    </strong>
+
+                    <small>
+                        Pay using your bank account
+                    </small>
+
+                </div>
+
+            </label>
+
+
+
+            <button
+                type="submit"
+                class="pay-btn"
+                id="payButton"
+            >
+
+                🔒 Pay ₹{{ "%.2f"|format(book.price or 0) }}
+
+            </button>
+
+
+        </form>
+
+
+
+        <div
+            id="loading"
+            class="loading"
+        >
+            Processing your payment...
+        </div>
+
+
+        <div
+            id="message"
+            class="message"
+        ></div>
+
+
+
+        <div class="secure">
+
+            🔐 Secure EduNote checkout
+
+        </div>
+
+
+
+    </div>
+
+</main>
+
+
+
+<script>
+
+    /*
+    ============================================================
+        PAYMENT INFORMATION
+    ============================================================
+
+        These values come from the Jinja variables supplied
+        by your FastAPI backend.
+    */
+
+    const userId = {{ user_id | default(0) | tojson }};
+
+    const bookId = {{ book_id | default(0) | tojson }};
+
+    const bookPrice = {{ (book.price or 0) | tojson }};
+
+
+
+    /*
+    ============================================================
+        ELEMENTS
+    ============================================================
+    */
+
+    const paymentForm =
+        document.getElementById("paymentForm");
+
+    const payButton =
+        document.getElementById("payButton");
+
+    const loading =
+        document.getElementById("loading");
+
+    const message =
+        document.getElementById("message");
+
+
+
+    /*
+    ============================================================
+        PAYMENT METHOD HIGHLIGHT
+    ============================================================
+    */
+
+    const methods =
+        document.querySelectorAll(".method");
+
+    const demoQrPanel =
+        document.getElementById("demoQrPanel");
+
+
+    methods.forEach(function(method) {
+
+        const radio =
+            method.querySelector("input");
+
+        radio.addEventListener("change", function() {
+
+            methods.forEach(function(item) {
+
+                item.classList.remove("selected");
+
+            });
+
+            if (radio.checked) {
+
+                method.classList.add("selected");
+
+            }
+
+            demoQrPanel.classList.toggle(
+                "visible",
+                radio.value === "Demo QR Scan" && radio.checked
+            );
+
+        });
+
+    });
+
+
+
+    /*
+    ============================================================
+        SHOW MESSAGE
+    ============================================================
+    */
+
+    function showMessage(text, type) {
+
+        message.textContent = text;
+
+        message.className =
+            "message " + type;
+
+    }
+
+
+
+    /*
+    ============================================================
+        PAYMENT SUBMIT
+    ============================================================
+    */
+
+    paymentForm.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            const selectedMethod =
+                document.querySelector(
+                    'input[name="payment_method"]:checked'
+                );
+
+
+            if (!selectedMethod) {
+
+                showMessage(
+                    "Please select a payment method.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+
+            /*
+            ----------------------------------------------------
+                IMPORTANT
+
+                Your PaymentCreate Pydantic schema expects:
+
+                amount
+                payment_for
+                item_id
+                item_type
+
+                Therefore we send EXACTLY those fields.
+            ----------------------------------------------------
+            */
+
+            const paymentData = {
+
+                amount: Number(bookPrice),
+
+                payment_for: "Book Purchase",
+
+                item_id: Number(bookId),
+
+                item_type: "book"
+
+            };
+
+
+
+            /*
+            ----------------------------------------------------
+                DISABLE BUTTON
+            ----------------------------------------------------
+            */
+
+            payButton.disabled = true;
+
+            payButton.textContent =
+                "Processing...";
+
+            loading.style.display =
+                "block";
+
+            message.className =
+                "message";
+
+            message.textContent = "";
+
+
+
+            try {
+
+                /*
+                ------------------------------------------------
+                    CREATE PAYMENT
+                ------------------------------------------------
+                */
+
+                const response =
+                    await fetch(
+                        "/payment/create",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(paymentData)
+                        }
+                    );
+
+
+
+                /*
+                ------------------------------------------------
+                    READ RESPONSE SAFELY
+                ------------------------------------------------
+                */
+
+                let result = null;
+
+                const contentType =
+                    response.headers.get(
+                        "content-type"
+                    );
+
+
+                if (
+                    contentType &&
+                    contentType.includes(
+                        "application/json"
+                    )
+                ) {
+
+                    result =
+                        await response.json();
+
+                } else {
+
+                    const text =
+                        await response.text();
+
+                    result = {
+                        detail: text
+                    };
+
+                }
+
+
+
+                /*
+                ------------------------------------------------
+                    ERROR
+                ------------------------------------------------
+                */
+
+                if (!response.ok) {
+
+                    let errorMessage =
+                        "Payment could not be created.";
+
+                    if (result) {
+
+                        if (Array.isArray(result.detail)) {
+
+                            errorMessage =
+                                result.detail
+                                    .map(function(error) {
+
+                                        if (
+                                            error &&
+                                            error.msg
+                                        ) {
+
+                                            return error.msg;
+
+                                        }
+
+                                        return JSON.stringify(error);
+
+                                    })
+                                    .join(", ");
+
+                        }
+
+                        else if (
+                            result.detail
+                        ) {
+
+                            errorMessage =
+                                result.detail;
+
+                        }
+
+                        else if (
+                            result.message
+                        ) {
+
+                            errorMessage =
+                                result.message;
+
+                        }
+
+                    }
+
+
+                    throw new Error(
+                        errorMessage
+                    );
+
+                }
+
+
+
+                /*
+                ------------------------------------------------
+                    PAYMENT CREATED SUCCESSFULLY
+                ------------------------------------------------
+                */
+
+                showMessage(
+                    "Payment created successfully. Completing your purchase...",
+                    "success"
+                );
+
+
+                /*
+                ------------------------------------------------
+                    NOW COMPLETE THE BOOK PURCHASE
+
+                    We send the selected payment method to
+                    your existing confirmation route.
+
+                    This keeps your existing purchase flow.
+                ------------------------------------------------
+                */
+
+                const confirmData =
+                    new URLSearchParams();
+
+
+                confirmData.append(
+                    "payment_method",
+                    selectedMethod.value
+                );
+
+
+                const confirmResponse =
+                    await fetch(
+                        `/student/${userId}/buy-book/${bookId}/confirm`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded",
+
+                                "Accept":
+                                    "text/html,application/json"
+                            },
+
+                            body:
+                                confirmData.toString()
+                        }
+                    );
+
+
+
+                /*
+                ------------------------------------------------
+                    CONFIRMATION RESPONSE
+                ------------------------------------------------
+                */
+
+                if (
+                    confirmResponse.ok
+                ) {
+
+                    const contentType2 =
+                        confirmResponse.headers.get(
+                            "content-type"
+                        );
+
+
+                    /*
+                    If FastAPI returns a normal HTML page,
+                    replace the current page with it.
+                    */
+
+                    if (
+                        contentType2 &&
+                        contentType2.includes(
+                            "text/html"
+                        )
+                    ) {
+
+                        const html =
+                            await confirmResponse.text();
+
+                        document.open();
+
+                        document.write(html);
+
+                        document.close();
+
+                    }
+
+                    else {
+
+                        let confirmResult =
+                            await confirmResponse.json();
+
+                        if (
+                            confirmResult.redirect
+                        ) {
+
+                            window.location.href =
+                                confirmResult.redirect;
+
+                        }
+
+                        else {
+
+                            window.location.href =
+                                `/student/${userId}`;
+
+                        }
+
+                    }
+
+                }
+
+                else {
+
+                    const confirmText =
+                        await confirmResponse.text();
+
+                    throw new Error(
+                        "Payment was created, but book confirmation failed. " +
+                        confirmText
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Payment error:",
+                    error
+                );
+
+
+                loading.style.display =
+                    "none";
+
+
+                showMessage(
+                    error.message ||
+                    "Something went wrong. Please try again.",
+                    "error"
+                );
+
+
+                payButton.disabled =
+                    false;
+
+
+                payButton.textContent =
+                    `🔒 Pay ₹${Number(bookPrice).toFixed(2)}`;
+
+            }
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

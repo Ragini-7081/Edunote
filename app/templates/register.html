@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNote - Register</title>
+
+<style>
+        
+
+body{
+    margin:0;
+    padding:0;
+    background:#f4f6fb;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.auth-card{
+    width:420px;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 10px 25px rgba(0,0,0,.1);
+}
+
+.logo{
+    text-align:center;
+    color:#2563eb;
+}
+
+.subtitle{
+    text-align:center;
+    color:gray;
+    margin-bottom:20px;
+}
+
+.input-group{
+    margin-bottom:15px;
+}
+
+.input-group label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:bold;
+}
+
+input,
+select{
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+
+.btn{
+    width:100%;
+    padding:12px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+.register-link{
+    text-align:center;
+    margin-top:20px;
+}
+
+
+
+
+
+
+</style>
+
+<body>
+
+<div class="container">
+
+    <div class="auth-card">
+
+        <h1 class="logo">EduNote</h1>
+        <p class="subtitle">Create Your Account</p>
+
+        <h2>Register</h2>
+
+        <form id="registerForm" action="/register" method="POST">
+
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" name="full_name" required>
+            </div>
+
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </div>
+
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirm_password" required>
+            </div>
+
+            <div class="input-group">
+                <label>Register As</label>
+
+                <select name="role" required>
+
+                    <option value="">Select Role</option>
+
+                    <option value="student">Student</option>
+
+                    <option value="author">Author</option>
+
+                    <option value="seller">Video Seller</option>
+
+                </select>
+
+            </div>
+
+            <button class="btn">
+                Register
+            </button>
+
+        </form>
+
+        <p class="register-link">
+            Already have an account?
+            <a href="/">Login Here</a>
+        </p>
+
+    </div>
+
+</div>
+
+<script >
+const form = document.getElementById("registerForm");
+
+form.addEventListener("submit", function(e){
+
+    const password = document.querySelector("input[name='password']").value;
+
+    const confirm = document.getElementById("confirm_password").value;
+
+    if(password !== confirm){
+
+        e.preventDefault();
+
+        alert("Passwords do not match.");
+
+    }
+
+});
+</script>
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+
+</body>
+</html>

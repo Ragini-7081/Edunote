@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EduNote | Write Book</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="/static/book.css">
+
+    <!-- Quill -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<header class="topbar">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            📚
+        </div>
+
+        <div>
+
+            <h2>EduNote</h2>
+
+            <small>Professional Writing Studio</small>
+
+        </div>
+
+    </div>
+
+    <div class="top-actions">
+
+        <a id="backToDashboard" href="#" style="display:flex;align-items:center;gap:6px;color:#64748b;text-decoration:none;font-size:14px;padding:10px 16px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;transition:.25s;" onmouseover="this.style.background='#eef4ff'" onmouseout="this.style.background='#f8fafc'">← Dashboard</a>
+
+        <button class="draft-btn">
+
+            💾 Save Draft
+
+        </button>
+
+        <button class="publish-btn">
+
+            🚀 Publish
+
+        </button>
+
+    </div>
+
+</header>
+
+<!-- ================= PAGE ================= -->
+
+<div class="container">
+
+    <!-- ================= LEFT ================= -->
+
+    <section class="editor-section">
+
+        <div class="editor-card">
+
+            <div class="section-title">
+
+                <h2>Write Your Book</h2>
+
+                <p>Create professional books using EduNote AI.</p>
+
+            </div>
+
+            <!-- Title -->
+
+            <div class="field">
+
+                <label>
+
+                    Book Title
+
+                </label>
+
+                <input
+
+                    type="text"
+
+                    id="title"
+
+                    class="title"
+
+                    placeholder="Enter your book title..."
+
+                >
+
+            </div>
+
+            <!-- Meta -->
+
+            <div class="meta">
+
+                <div class="field">
+
+                    <label>
+
+                        Category
+
+                    </label>
+
+                    <select id="category">
+
+                        <option value="">Choose Category</option>
+                        <optgroup label="📚 Education">
+                          <option>Education</option>
+                          <option>Self Help</option>
+                          <option>Academic</option>
+                          <option>Research</option>
+                        </optgroup>
+                        <optgroup label="📖 Literature">
+                          <option>Story</option>
+                          <option>Novel</option>
+                          <option>Poetry</option>
+                          <option>Biography</option>
+                          <option>History</option>
+                        </optgroup>
+                        <optgroup label="🌍 General">
+                          <option>Politics</option>
+                          <option>Economics</option>
+                          <option>Philosophy</option>
+                          <option>Religion</option>
+                          <option>Health &amp; Fitness</option>
+                          <option>Science</option>
+                          <option>Travel</option>
+                          <option>Business</option>
+                        </optgroup>
+                        <optgroup label="💻 Technology">
+                          <option>Programming</option>
+                          <option>Python</option>
+                          <option>JavaScript</option>
+                          <option>FastAPI</option>
+                          <option>Artificial Intelligence</option>
+                          <option>Machine Learning</option>
+                          <option>Data Science</option>
+                          <option>Cybersecurity</option>
+                          <option>Web Development</option>
+                        </optgroup>
+                        <optgroup label="🎨 Other">
+                          <option>Art &amp; Design</option>
+                          <option>Music</option>
+                          <option>Sports</option>
+                          <option>Cooking</option>
+                          <option>Other</option>
+                        </optgroup>
+
+                    </select>
+
+                </div>
+
+                <div class="field">
+
+                    <label>
+
+                        Price (₹)
+
+                    </label>
+
+                    <input
+
+                        type="number"
+
+                        id="price"
+
+                        placeholder="199"
+
+                    >
+
+                </div>
+
+            </div>
+
+            <!-- Description -->
+
+            <div class="field">
+
+                <label>
+
+                    Description
+
+                </label>
+
+                <textarea
+
+                    id="description"
+
+                    placeholder="Write a short description of your book..."
+
+                ></textarea>
+
+            </div>
+
+            <!-- Cover -->
+
+            <div class="field">
+
+                <label>
+
+                    Book Cover
+
+                </label>
+
+                <div class="cover-upload">
+
+                    <label class="upload-btn">
+
+                        📁 Upload Cover
+
+                        <input
+
+                            type="file"
+
+                            id="cover"
+
+                            hidden
+
+                        >
+
+                    </label>
+
+                    <span id="cover-name">
+
+                        No image selected
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Editor -->
+
+            <div class="field">
+
+                <label>
+
+                    Book Content
+
+                </label>
+
+                <div id="editor"></div>
+
+            </div>
+
+        </div>
+
+    </section>
+        <!-- ================= RIGHT SIDE ================= -->
+
+    <aside class="ai-panel">
+
+        <div class="ai-card">
+
+            <div class="ai-header">
+
+                <div class="ai-avatar">
+                    🤖
+                </div>
+
+                <div>
+
+                    <h2>EduNote AI</h2>
+
+                    <p>Your Writing Assistant</p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Quick Actions -->
+
+            <div class="quick-actions">
+
+                <button class="quick-btn">
+                    💡 Suggest Title
+                </button>
+
+                <button class="quick-btn">
+                    ✨ Improve Writing
+                </button>
+
+                <button class="quick-btn">
+                    ➜ Continue Paragraph
+                </button>
+
+                <button class="quick-btn">
+                    ✔ Fix Grammar
+                </button>
+
+                <button class="quick-btn">
+                    📝 Generate Summary
+                </button>
+
+                <button class="quick-btn">
+                    ❓ Create Quiz
+                </button>
+
+            </div>
+
+
+            <!-- Chat -->
+
+            <div
+                id="chat-box"
+                class="chat-box"
+            >
+
+                <div class="ai-message">
+
+                    👋 Welcome to EduNote AI!
+
+                    <br><br>
+
+                    I can help you with:
+
+                    <ul>
+
+                        <li>📖 Writing chapters</li>
+
+                        <li>💡 Suggesting titles</li>
+
+                        <li>✨ Improving grammar</li>
+
+                        <li>📝 Summarizing content</li>
+
+                        <li>❓ Creating quizzes</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+
+            <!-- Input -->
+
+            <div class="chat-input">
+
+                <textarea
+
+                    id="ai-message"
+
+                    placeholder="Ask AI anything about your book..."
+
+                ></textarea>
+
+                <button id="send-ai">
+
+                    ➤ Send
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>
+
+<!-- ================= FOOTER ================= -->
+
+<footer class="footer">
+
+    <p>
+
+        © 2026 EduNote • AI Powered Book Writing Platform
+
+    </p>
+
+</footer>
+
+<!-- Quill Editor -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
+<!-- Server variables — must be BEFORE book.js -->
+<script>
+  window.AUTHOR_ID = {{ author_id }};
+  window.BOOK_ID   = {{ book_id }};
+  // Debug
+  console.log("[EduNote] AUTHOR_ID from server:", window.AUTHOR_ID);
+</script>
+
+<!-- Your JS (v2 — cache bust) -->
+<script src="/static/book.js?v=2"></script>
+
+</body>
+
+</html>

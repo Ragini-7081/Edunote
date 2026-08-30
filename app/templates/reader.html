@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ book.title }} — EduNote Reader</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   CSS VARIABLES — LIGHT / DARK
+============================================= */
+[data-theme="light"] {
+  --bg:        #f8f6f1;
+  --page-bg:   #fffef9;
+  --text:      #1a1a1a;
+  --text-soft: #555;
+  --border:    #e4ddd0;
+  --sidebar:   #fff;
+  --topbar:    #fff;
+  --shadow:    0 4px 24px rgba(0,0,0,.08);
+  --accent:    #2563eb;
+  --tag-bg:    #eef4ff;
+  --tag-col:   #2563eb;
+  --comment-bg:#f8fafc;
+  --input-bg:  #fff;
+  --btn-text:  #1e293b;
+  --overlay:   rgba(0,0,0,.45);
+}
+[data-theme="dark"] {
+  --bg:        #0f0f0f;
+  --page-bg:   #1a1a1a;
+  --text:      #e8e0d0;
+  --text-soft: #9ca3af;
+  --border:    #2d2d2d;
+  --sidebar:   #161616;
+  --topbar:    #161616;
+  --shadow:    0 4px 24px rgba(0,0,0,.5);
+  --accent:    #60a5fa;
+  --tag-bg:    #1e3a5f;
+  --tag-col:   #93c5fd;
+  --comment-bg:#1f1f1f;
+  --input-bg:  #252525;
+  --btn-text:  #e8e0d0;
+  --overlay:   rgba(0,0,0,.7);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:"Merriweather",serif;min-height:100vh;transition:background .3s,color .3s;}
+
+/* =============================================
+   TOPBAR
+============================================= */
+.reader-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:60px;background:var(--topbar);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;box-shadow:var(--shadow);transition:background .3s;
+}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  color:var(--text-soft);text-decoration:none;
+  font-size:13px;font-family:"Poppins",sans-serif;
+  padding:7px 14px;border-radius:10px;border:1px solid var(--border);
+  transition:.25s;background:var(--bg);
+}
+.back-btn:hover{border-color:var(--accent);color:var(--accent);}
+.book-title-bar{font-size:14px;font-weight:600;font-family:"Poppins",sans-serif;color:var(--text);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-btn{
+  width:38px;height:38px;border:1px solid var(--border);border-radius:10px;
+  background:var(--bg);color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  transition:.25s;font-family:"Poppins",sans-serif;
+}
+.icon-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.font-size-wrap{display:flex;align-items:center;gap:4px;}
+.font-size-wrap span{font-size:12px;color:var(--text-soft);font-family:"Poppins",sans-serif;}
+.theme-toggle{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:24px;
+  border:1px solid var(--border);background:var(--bg);
+  cursor:pointer;font-size:13px;font-family:"Poppins",sans-serif;
+  color:var(--text);transition:.25s;
+}
+.theme-toggle:hover{border-color:var(--accent);}
+
+/* =============================================
+   LAYOUT
+============================================= */
+.reader-layout{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  min-height:100vh;
+  padding-top:60px;
+}
+
+/* =============================================
+   BOOK PAGES
+============================================= */
+.book-main{
+  padding:40px 24px 120px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.page-container{
+  width:100%;max-width:720px;
+  background:var(--page-bg);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  overflow:hidden;
+  transition:background .3s;
+  animation:pageIn .4s ease;
+}
+@keyframes pageIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.page-header{
+  padding:32px 44px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.page-num-tag{
+  font-size:11px;font-weight:600;font-family:"Poppins",sans-serif;
+  background:var(--tag-bg);color:var(--tag-col);
+  padding:4px 12px;border-radius:20px;
+}
+.chapter-label{font-size:13px;color:var(--text-soft);font-family:"Poppins",sans-serif;}
+.page-content{
+  padding:36px 44px;
+  font-size:var(--reader-font-size, 17px);
+  line-height:1.9;
+  color:var(--text);
+  min-height:480px;
+  transition:font-size .2s;
+}
+.page-content p{margin-bottom:1.4em;}
+.page-content h1,.page-content h2,.page-content h3{
+  font-family:"Poppins",sans-serif;margin:1.2em 0 .6em;
+  color:var(--text);
+}
+.page-content h1{font-size:1.6em;}
+.page-content h2{font-size:1.3em;}
+.page-content h3{font-size:1.1em;}
+.page-content ul,.page-content ol{margin:1em 0 1em 1.6em;}
+.page-content li{margin-bottom:.5em;}
+.page-content blockquote{
+  border-left:4px solid var(--accent);
+  padding:12px 20px;margin:1em 0;
+  color:var(--text-soft);background:var(--tag-bg);border-radius:0 10px 10px 0;
+}
+
+/* =============================================
+   NAVIGATION
+============================================= */
+.page-nav{
+  padding:20px 44px 28px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 22px;border:1px solid var(--border);
+  border-radius:12px;background:var(--bg);color:var(--text);
+  cursor:pointer;font-size:14px;font-family:"Poppins",sans-serif;
+  font-weight:600;transition:.25s;
+}
+.nav-btn:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent);}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed;}
+.nav-btn.next-btn{background:var(--accent);color:#fff;border-color:var(--accent);}
+.nav-btn.next-btn:hover:not(:disabled){background:#1d4ed8;border-color:#1d4ed8;}
+.page-info{
+  font-size:13px;color:var(--text-soft);
+  font-family:"Poppins",sans-serif;text-align:center;line-height:1.5;
+}
+.progress-bar-wrap{width:100%;max-width:720px;margin-top:16px;}
+.progress-bar-track{height:5px;background:var(--border);border-radius:10px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:10px;transition:width .4s ease;}
+.progress-label{font-size:11px;color:var(--text-soft);font-family:"Poppins",sans-serif;text-align:right;margin-top:5px;}
+
+/* =============================================
+   SIDEBAR — COMMENTS
+============================================= */
+.comments-sidebar{
+  background:var(--sidebar);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:60px;height:calc(100vh - 60px);
+  transition:background .3s;
+}
+.sidebar-header{
+  padding:20px 22px 14px;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-header h3{font-size:16px;font-weight:700;font-family:"Poppins",sans-serif;margin-bottom:2px;}
+.sidebar-header p{font-size:12px;color:var(--text-soft);font-family:"Poppins",sans-serif;}
+.comments-list{
+  flex:1;overflow-y:auto;padding:16px 18px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.comments-list::-webkit-scrollbar{width:4px;}
+.comments-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+.comment-card{
+  background:var(--comment-bg);border-radius:14px;
+  padding:14px 16px;border:1px solid var(--border);
+  animation:fadeUp .3s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.comment-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.c-avatar{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#2563eb,#60a5fa);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:13px;font-family:"Poppins",sans-serif;
+}
+.c-name{font-size:13px;font-weight:600;font-family:"Poppins",sans-serif;}
+.c-time{font-size:11px;color:var(--text-soft);font-family:"Poppins",sans-serif;}
+.c-text{font-size:13px;line-height:1.55;color:var(--text);font-family:"Poppins",sans-serif;}
+.no-comments{
+  text-align:center;padding:40px 16px;color:var(--text-soft);
+  font-family:"Poppins",sans-serif;
+}
+.no-comments .nc-icon{font-size:40px;margin-bottom:10px;}
+.no-comments p{font-size:13px;}
+
+/* ADD COMMENT */
+.add-comment{
+  padding:16px 18px;border-top:1px solid var(--border);
+  background:var(--sidebar);
+}
+.add-comment p{
+  font-size:12px;font-weight:600;color:var(--text-soft);
+  font-family:"Poppins",sans-serif;margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px;
+}
+.comment-input{
+  width:100%;min-height:72px;resize:none;
+  border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;font-size:13px;
+  font-family:"Poppins",sans-serif;
+  background:var(--input-bg);color:var(--text);
+  outline:none;transition:.3s;
+}
+.comment-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.comment-submit{
+  width:100%;margin-top:10px;padding:11px;
+  border:none;border-radius:12px;
+  background:var(--accent);color:#fff;
+  cursor:pointer;font-weight:600;font-size:14px;
+  font-family:"Poppins",sans-serif;transition:.25s;
+}
+.comment-submit:hover{background:#1d4ed8;transform:translateY(-1px);}
+.comment-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* Login prompt */
+.login-prompt{
+  font-size:12px;color:var(--text-soft);font-family:"Poppins",sans-serif;
+  text-align:center;padding:10px;
+}
+.login-prompt a{color:var(--accent);text-decoration:none;font-weight:600;}
+
+/* BOOK INFO CARD */
+.book-info-card{
+  width:100%;max-width:720px;
+  background:var(--page-bg);border-radius:20px;
+  padding:28px 36px;margin-top:20px;
+  box-shadow:var(--shadow);border:1px solid var(--border);
+  font-family:"Poppins",sans-serif;
+}
+.book-info-card h2{font-size:22px;font-weight:700;margin-bottom:8px;}
+.book-info-card .meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.meta-tag{
+  padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;
+  background:var(--tag-bg);color:var(--tag-col);
+}
+.book-info-card .desc{font-size:14px;color:var(--text-soft);line-height:1.7;}
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+@media(max-width:1000px){
+  .reader-layout{grid-template-columns:1fr;}
+  .comments-sidebar{position:relative;top:0;height:auto;border-left:none;border-top:1px solid var(--border);}
+}
+@media(max-width:600px){
+  .book-main{padding:20px 12px 100px;}
+  .page-content{padding:24px 20px;}
+  .page-header,.page-nav{padding-left:20px;padding-right:20px;}
+  .reader-topbar{padding:0 14px;}
+  .book-title-bar{max-width:180px;}
+}
+</style>
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+<body>
+
+<!-- =================== TOPBAR =================== -->
+<div class="reader-topbar">
+  <div class="topbar-left">
+    <a href="javascript:history.back()" class="back-btn">← Back</a>
+    <span class="book-title-bar">{{ book.title }}</span>
+  </div>
+  <div class="topbar-right">
+    <!-- Font size controls -->
+    <div class="font-size-wrap">
+      <button class="icon-btn" id="fontDown" title="Decrease font">A-</button>
+      <span id="fontLabel">17px</span>
+      <button class="icon-btn" id="fontUp" title="Increase font">A+</button>
+    </div>
+    <!-- Dark / Light mode -->
+    <button class="theme-toggle" id="themeBtn">🌙 Dark Mode</button>
+  </div>
+</div>
+
+<!-- =================== LAYOUT =================== -->
+<div class="reader-layout">
+
+  <!-- LEFT: PAGES -->
+  <div class="book-main">
+
+    <!-- Book info card -->
+    <div class="book-info-card">
+      <h2>{{ book.title }}</h2>
+      <div class="meta">
+        <span class="meta-tag">📚 {{ book.category or "General" }}</span>
+        <span class="meta-tag">✍️ {{ book.author.full_name if book.author else "Unknown" }}</span>
+        <span class="meta-tag">₹{{ book.price or 0 }}</span>
+      </div>
+      <p class="desc">{{ book.description or "No description available." }}</p>
+    </div>
+
+    <!-- Page container -->
+    <div class="page-container" id="pageContainer">
+      <div class="page-header">
+        <span class="chapter-label" id="chapterLabel">Chapter 1</span>
+        <span class="page-num-tag" id="pageTag">Page 1</span>
+      </div>
+      <div class="page-content" id="pageContent">
+        Loading...
+      </div>
+      <div class="page-nav">
+        <button class="nav-btn" id="prevBtn" disabled>← Previous</button>
+        <div class="page-info">
+          <span id="pageDisplay">Page 1 of 1</span>
+        </div>
+        <button class="nav-btn next-btn" id="nextBtn">Next →</button>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">0% read</div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: COMMENTS SIDEBAR -->
+  <aside class="comments-sidebar">
+    <div class="sidebar-header">
+      <h3>💬 Comments</h3>
+      <p id="commentCount">Loading...</p>
+    </div>
+
+    <div class="comments-list" id="commentsList">
+      <div class="no-comments">
+        <div class="nc-icon">💬</div>
+        <p>Loading comments...</p>
+      </div>
+    </div>
+
+    <!-- Add Comment -->
+    <div class="add-comment">
+      {% if user_id > 0 %}
+        <p>Add your comment</p>
+        <textarea
+          class="comment-input"
+          id="commentInput"
+          placeholder="Share your thoughts about this book..."
+        ></textarea>
+        <button class="comment-submit" id="commentSubmit">
+          💬 Post Comment
+        </button>
+      {% else %}
+        <p>Add your comment</p>
+        <div class="login-prompt">
+          <a href="/">Login</a> to leave a comment on this book.
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+
+</div><!-- /layout -->
+
+<script>
+/* =============================================
+   BOOK DATA
+============================================= */
+const BOOK_ID   = {{ book.id }};
+const USER_ID   = {{ user_id }};
+const RAW_HTML  = {{ book.content | tojson }};
+
+/* =============================================
+   SPLIT CONTENT INTO PAGES
+   ~~ by paragraph (500 chars per page) ~~
+============================================= */
+function splitIntoPages(html) {
+    // Parse into a temp div
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html || "<p>This book has no content yet.</p>";
+
+    const children  = Array.from(tmp.children);
+    const pages     = [];
+    let   current   = "";
+    let   charCount = 0;
+    const LIMIT     = 1800; // chars per page
+
+    if (children.length === 0) {
+        return ["<p>" + (html || "No content.") + "</p>"];
+    }
+
+    for (const el of children) {
+        const elHtml = el.outerHTML || "";
+        const elLen  = el.textContent.length;
+
+        if (charCount + elLen > LIMIT && current) {
+            pages.push(current);
+            current   = elHtml;
+            charCount = elLen;
+        } else {
+            current   += elHtml;
+            charCount += elLen;
+        }
+    }
+    if (current) pages.push(current);
+    return pages.length ? pages : ["<p>No content available.</p>"];
+}
+
+const PAGES      = splitIntoPages(RAW_HTML);
+let   currentPage = 0;
+let   fontSize    = 17;
+
+/* =============================================
+   RENDER PAGE
+============================================= */
+function renderPage() {
+    const content = document.getElementById("pageContent");
+    content.style.opacity = "0";
+    setTimeout(() => {
+        content.innerHTML   = PAGES[currentPage];
+        content.style.transition = "opacity .3s";
+        content.style.opacity = "1";
+    }, 150);
+
+    document.getElementById("pageTag").innerText     = "Page " + (currentPage + 1);
+    document.getElementById("chapterLabel").innerText = "Page " + (currentPage + 1) + " of " + PAGES.length;
+    document.getElementById("pageDisplay").innerText  = "Page " + (currentPage + 1) + " of " + PAGES.length;
+    document.getElementById("prevBtn").disabled       = currentPage === 0;
+    document.getElementById("nextBtn").disabled       = currentPage === PAGES.length - 1;
+    document.getElementById("nextBtn").innerText      = currentPage === PAGES.length - 1 ? "✅ Finished" : "Next →";
+
+    const pct = Math.round(((currentPage + 1) / PAGES.length) * 100);
+    document.getElementById("progressFill").style.width  = pct + "%";
+    document.getElementById("progressLabel").innerText   = pct + "% read";
+
+    // Save progress to sessionStorage
+    sessionStorage.setItem("read_progress_" + BOOK_ID, currentPage);
+
+    // Scroll to top of page
+    document.getElementById("pageContainer").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// Restore progress
+const saved = parseInt(sessionStorage.getItem("read_progress_" + BOOK_ID)) || 0;
+currentPage = Math.min(saved, PAGES.length - 1);
+renderPage();
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+    if (currentPage < PAGES.length - 1) { currentPage++; renderPage(); }
+});
+document.getElementById("prevBtn").addEventListener("click", () => {
+    if (currentPage > 0) { currentPage--; renderPage(); }
+});
+
+// Keyboard navigation
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight" && currentPage < PAGES.length - 1) { currentPage++; renderPage(); }
+    if (e.key === "ArrowLeft"  && currentPage > 0)                { currentPage--; renderPage(); }
+});
+
+/* =============================================
+   FONT SIZE
+============================================= */
+function applyFont() {
+    document.getElementById("pageContent").style.fontSize = fontSize + "px";
+    document.getElementById("fontLabel").innerText = fontSize + "px";
+}
+document.getElementById("fontUp").addEventListener("click", () => {
+    if (fontSize < 26) { fontSize += 1; applyFont(); }
+});
+document.getElementById("fontDown").addEventListener("click", () => {
+    if (fontSize > 12) { fontSize -= 1; applyFont(); }
+});
+
+/* =============================================
+   DARK / LIGHT MODE
+============================================= */
+const themeBtn = document.getElementById("themeBtn");
+const html     = document.documentElement;
+
+// Restore saved theme
+const savedTheme = localStorage.getItem("edunote_reader_theme") || "light";
+html.setAttribute("data-theme", savedTheme);
+themeBtn.innerText = savedTheme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+
+themeBtn.addEventListener("click", () => {
+    const current  = html.getAttribute("data-theme");
+    const newTheme = current === "dark" ? "light" : "dark";
+    html.setAttribute("data-theme", newTheme);
+    themeBtn.innerText = newTheme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+    localStorage.setItem("edunote_reader_theme", newTheme);
+});
+
+/* =============================================
+   LOAD COMMENTS
+============================================= */
+async function loadComments() {
+    try {
+        const res  = await fetch("/book/" + BOOK_ID + "/comments");
+        const data = await res.json();
+        const list = document.getElementById("commentsList");
+        const cnt  = document.getElementById("commentCount");
+
+        cnt.innerText = data.length + " comment" + (data.length !== 1 ? "s" : "");
+
+        if (!data.length) {
+            list.innerHTML = `
+              <div class="no-comments">
+                <div class="nc-icon">💬</div>
+                <p>No comments yet. Be the first to comment!</p>
+              </div>`;
+            return;
+        }
+
+        list.innerHTML = data.map(c => `
+          <div class="comment-card">
+            <div class="comment-top">
+              <div class="c-avatar">${(c.user_name||"?").charAt(0).toUpperCase()}</div>
+              <div>
+                <div class="c-name">${c.user_name}</div>
+                <div class="c-time">${c.created_at}</div>
+              </div>
+            </div>
+            <div class="c-text">${c.text}</div>
+          </div>`).join("");
+    } catch(e) {
+        document.getElementById("commentsList").innerHTML =
+          `<div class="no-comments"><p>Could not load comments.</p></div>`;
+    }
+}
+
+/* =============================================
+   POST COMMENT
+============================================= */
+const submitBtn = document.getElementById("commentSubmit");
+if (submitBtn) {
+    submitBtn.addEventListener("click", async () => {
+        const input = document.getElementById("commentInput");
+        const text  = (input.value || "").trim();
+        if (!text) { input.focus(); return; }
+
+        submitBtn.disabled  = true;
+        submitBtn.innerText = "Posting...";
+
+        try {
+            const res = await fetch("/comments", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json" },
+                body:    JSON.stringify({
+                    book_id: BOOK_ID,
+                    user_id: USER_ID,
+                    text:    text
+                })
+            });
+            if (res.ok) {
+                input.value = "";
+                await loadComments();
+            }
+        } catch(e) {
+            alert("Could not post comment. Please try again.");
+        } finally {
+            submitBtn.disabled  = false;
+            submitBtn.innerText = "💬 Post Comment";
+        }
+    });
+}
+
+// Track view count (once per session)
+if (!sessionStorage.getItem("viewed_" + BOOK_ID)) {
+    fetch("/book/" + BOOK_ID + "/view", { method: "POST" });
+    sessionStorage.setItem("viewed_" + BOOK_ID, "1");
+}
+
+// Initial load
+loadComments();
+</script>
+</body>
+</html>

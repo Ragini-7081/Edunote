@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>{{ video.title if video else "Watch Video" }} - EduNote</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f7fb;
+        color: #1f2937;
+    }
+
+    .topbar {
+        width: 100%;
+        min-height: 64px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 25px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .logo {
+        font-size: 25px;
+        font-weight: 800;
+        color: #4f46e5;
+        text-decoration: none;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        text-decoration: none;
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .back-btn:hover {
+        background: #e0e7ff;
+    }
+
+    .page-container {
+        width: min(1250px, 95%);
+        margin: 25px auto 50px;
+    }
+
+    .watch-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 2.2fr) minmax(300px, 1fr);
+        gap: 22px;
+        align-items: start;
+    }
+
+    .video-card {
+        background: #ffffff;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);
+    }
+
+    .video-wrapper {
+        width: 100%;
+        background: #000000;
+        position: relative;
+    }
+
+    video {
+        display: block;
+        width: 100%;
+        max-height: 650px;
+        background: #000000;
+    }
+
+    .video-error {
+        display: none;
+        padding: 35px;
+        color: #ffffff;
+        text-align: center;
+        background: #111827;
+    }
+
+    .video-info {
+        padding: 22px;
+    }
+
+    .video-title {
+        font-size: 26px;
+        line-height: 1.3;
+        margin-bottom: 10px;
+        color: #111827;
+    }
+
+    .video-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .badge {
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .description {
+        color: #6b7280;
+        line-height: 1.7;
+        margin-top: 12px;
+        white-space: pre-wrap;
+    }
+
+    .video-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 18px;
+        padding-top: 15px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .like-btn {
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        color: #374151;
+        border-radius: 9px;
+        padding: 10px 18px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    .like-btn:hover {
+        background: #f3f4f6;
+    }
+
+    .like-btn.liked {
+        background: #fee2e2;
+        color: #dc2626;
+        border-color: #fecaca;
+    }
+
+    .like-count {
+        font-weight: 700;
+        color: #4b5563;
+    }
+
+    .side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .panel {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    .panel h2 {
+        font-size: 19px;
+        margin-bottom: 15px;
+        color: #111827;
+    }
+
+    .current-time {
+        background: #f3f4f6;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #4b5563;
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 130px;
+        resize: vertical;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        padding: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        outline: none;
+    }
+
+    textarea:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn {
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 11px 16px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+
+    .btn-primary {
+        width: 100%;
+        background: #4f46e5;
+        color: #ffffff;
+        margin-top: 10px;
+    }
+
+    .btn-primary:hover {
+        background: #4338ca;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .notes-list {
+        margin-top: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .note-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 9px;
+        padding: 12px;
+        background: #fafafa;
+    }
+
+    .note-time {
+        font-size: 12px;
+        color: #4f46e5;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .note-content {
+        font-size: 14px;
+        color: #374151;
+        white-space: pre-wrap;
+        line-height: 1.5;
+    }
+
+    .empty {
+        color: #9ca3af;
+        text-align: center;
+        padding: 15px 5px;
+        font-size: 14px;
+    }
+
+    .comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .comment-input {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        padding: 12px;
+        font-family: inherit;
+        outline: none;
+    }
+
+    .comment-input:focus {
+        border-color: #6366f1;
+    }
+
+    .comments-list {
+        margin-top: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: 450px;
+        overflow-y: auto;
+    }
+
+    .comment {
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 9px;
+        background: #fafafa;
+    }
+
+    .comment-user {
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .comment-text {
+        color: #4b5563;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+
+    .comment-date {
+        margin-top: 6px;
+        color: #9ca3af;
+        font-size: 11px;
+    }
+
+    .message {
+        display: none;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+
+    .message.success {
+        display: block;
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .message.error {
+        display: block;
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    @media (max-width: 900px) {
+        .watch-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .side-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .topbar {
+            padding: 0 14px;
+        }
+
+        .logo {
+            font-size: 21px;
+        }
+
+        .page-container {
+            width: 96%;
+            margin-top: 15px;
+        }
+
+        .video-title {
+            font-size: 21px;
+        }
+
+        .side-panel {
+            display: flex;
+        }
+
+        .video-info {
+            padding: 16px;
+        }
+
+        .video-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+```
+
+<link rel="stylesheet" href="/static/student-theme.css">
+</head>
+
+<body>
+
+<header class="topbar">
+
+```
+<a href="/" class="logo">
+    EduNote
+</a>
+
+<a href="javascript:history.back()" class="back-btn">
+    ← Back
+</a>
+```
+
+</header>
+
+<main class="page-container">
+
+```
+<div class="watch-layout">
+
+    <section class="video-card">
+
+        <div class="video-wrapper">
+
+            {% if video %}
+
+            <video
+                id="mainVideo"
+                controls
+                preload="metadata"
+                playsinline
+                {% if video.thumbnail %}
+                poster="/static/{{ video.thumbnail }}"
+                {% endif %}
+            >
+
+                {% if video.filename %}
+
+                <source
+                    src="/static/{{ video.filename }}"
+                    type="video/mp4"
+                >
+
+                {% endif %}
+
+                Your browser does not support HTML5 video.
+
+            </video>
+
+            <div id="videoError" class="video-error">
+                Unable to play this video.
+                Please check that the uploaded video file exists.
+            </div>
+
+            {% else %}
+
+            <div
+                class="video-error"
+                style="display:block;"
+            >
+                Video not found.
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        {% if video %}
+
+        <div class="video-info">
+
+            <h1 class="video-title">
+                {{ video.title }}
+            </h1>
+
+
+            <div class="video-meta">
+
+                {% if video.category %}
+
+                <span class="badge">
+                    {{ video.category }}
+                </span>
+
+                {% endif %}
+
+
+                <span class="badge">
+                    👁
+                    <span id="viewCount">
+                        {{ video.views if video.views is defined else 0 }}
+                    </span>
+                    views
+                </span>
+
+
+                <span class="badge">
+                    👍
+                    <span id="likeCount">
+                        {{ video.likes if video.likes is defined else 0 }}
+                    </span>
+                    likes
+                </span>
+
+            </div>
+
+
+            {% if video.description %}
+
+            <div class="description">
+                {{ video.description }}
+            </div>
+
+            {% endif %}
+
+
+            <div class="video-actions">
+
+                <button
+                    type="button"
+                    id="likeBtn"
+                    class="like-btn"
+                >
+                    👍 Like
+                </button>
+
+                <span class="like-count">
+                    <span id="likeCountAction">
+                        {{ video.likes if video.likes is defined else 0 }}
+                    </span>
+                    likes
+                </span>
+
+            </div>
+
+
+            <div
+                id="likeMessage"
+                class="message"
+            ></div>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <aside class="side-panel">
+
+        <section class="panel">
+
+            <h2>
+                📝 My Notes
+            </h2>
+
+
+            <div class="current-time">
+
+                Video time:
+
+                <strong id="currentTime">
+                    00:00
+                </strong>
+
+            </div>
+
+
+            <textarea
+                id="noteContent"
+                placeholder="Write your note here..."
+            ></textarea>
+
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                id="saveNoteBtn"
+            >
+                Save Note
+            </button>
+
+
+            <div
+                id="noteMessage"
+                class="message"
+            ></div>
+
+
+            <div
+                id="notesList"
+                class="notes-list"
+            >
+
+                <div class="empty">
+                    Loading notes...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel">
+
+            <h2>
+                💬 Comments
+            </h2>
+
+
+            <form
+                id="commentForm"
+                class="comment-form"
+            >
+
+                <textarea
+                    id="commentInput"
+                    class="comment-input"
+                    placeholder="Write a comment..."
+                    required
+                ></textarea>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Post Comment
+                </button>
+
+            </form>
+
+
+            <div
+                id="commentMessage"
+                class="message"
+            ></div>
+
+
+            <div
+                id="commentsList"
+                class="comments-list"
+            >
+
+                <div class="empty">
+                    Loading comments...
+                </div>
+
+            </div>
+
+        </section>
+
+    </aside>
+
+</div>
+```
+
+</main>
+
+<script>
+
+/* ============================================================
+   IDs
+============================================================ */
+
+const videoId = Number(
+    {{ video.id if video else 0 }}
+);
+
+/*
+   IMPORTANT FIX:
+
+   Your old code had studentId commented out,
+   but many functions still used studentId.
+
+   Now we create studentId from the user_id
+   passed by FastAPI/Jinja.
+*/
+
+const USER_ID = Number(
+    {{ user_id | default(student_id | default(0)) }}
+);
+
+const studentId = USER_ID;
+
+/*
+   Keep these aliases because some of your old
+   JavaScript was using VIDEO_ID/videoPlayer.
+*/
+
+const VIDEO_ID = videoId;
+
+
+/* ============================================================
+   VIDEO
+============================================================ */
+
+const mainVideo =
+    document.getElementById("mainVideo");
+
+const videoPlayer =
+    mainVideo;
+
+const currentTimeElement =
+    document.getElementById("currentTime");
+
+
+function formatTime(seconds) {
+
+    if (!Number.isFinite(seconds)) {
+        return "00:00";
+    }
+
+    seconds = Math.floor(seconds);
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+    const remainingSeconds =
+        seconds % 60;
+
+    return (
+        String(minutes).padStart(2, "0")
+        + ":"
+        + String(remainingSeconds).padStart(2, "0")
+    );
+}
+
+
+if (mainVideo) {
+
+    mainVideo.addEventListener(
+        "timeupdate",
+        function () {
+
+            if (currentTimeElement) {
+
+                currentTimeElement.textContent =
+                    formatTime(mainVideo.currentTime);
+
+            }
+
+        }
+    );
+
+
+    mainVideo.addEventListener(
+        "error",
+        function () {
+
+            const errorBox =
+                document.getElementById("videoError");
+
+            if (errorBox) {
+                errorBox.style.display = "block";
+            }
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   NOTES
+============================================================ */
+
+const noteContent =
+    document.getElementById("noteContent");
+
+const noteInput =
+    noteContent;
+
+const saveNoteBtn =
+    document.getElementById("saveNoteBtn");
+
+const notesList =
+    document.getElementById("notesList");
+
+const noteMessage =
+    document.getElementById("noteMessage");
+
+
+function showNoteMessage(
+    message,
+    type = "success"
+) {
+
+    if (!noteMessage) {
+        return;
+    }
+
+    noteMessage.textContent =
+        message;
+
+    noteMessage.className =
+        "message " + type;
+
+    setTimeout(
+        function () {
+
+            noteMessage.className =
+                "message";
+
+        },
+        3000
+    );
+
+}
+
+
+/* ============================================================
+   LOAD NOTES
+============================================================ */
+
+async function loadNotes() {
+
+    if (!videoId || !studentId) {
+
+        notesList.innerHTML =
+            '<div class="empty">Student or video information is missing.</div>';
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/video-notes/${videoId}/${studentId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
+
+
+        const responseText =
+            await response.text();
+
+        console.log(
+            "Load notes response:",
+            response.status,
+            responseText
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Unable to load notes: ${response.status}`
+            );
+
+        }
+
+
+        let data = {};
+
+        try {
+            data = responseText
+                ? JSON.parse(responseText)
+                : [];
+        }
+        catch (error) {
+
+            console.error(
+                "Invalid notes JSON:",
+                error
+            );
+
+            throw new Error(
+                "Invalid notes response"
+            );
+
+        }
+
+
+        let notes = data;
+
+        if (
+            data &&
+            Array.isArray(data.notes)
+        ) {
+
+            notes =
+                data.notes;
+
+        }
+
+
+        if (!Array.isArray(notes)) {
+            notes = [];
+        }
+
+
+        renderNotes(notes);
+
+    }
+    catch (error) {
+
+        console.error(
+            "Notes loading error:",
+            error
+        );
+
+        notesList.innerHTML =
+            '<div class="empty">Unable to load notes.</div>';
+
+    }
+
+}
+
+
+/* ============================================================
+   RENDER NOTES
+============================================================ */
+
+function renderNotes(notes) {
+
+    if (
+        !Array.isArray(notes)
+        ||
+        notes.length === 0
+    ) {
+
+        notesList.innerHTML =
+            '<div class="empty">No notes yet.</div>';
+
+        return;
+    }
+
+
+    notesList.innerHTML = "";
+
+
+    notes.forEach(
+        function (note) {
+
+            const item =
+                document.createElement("div");
+
+            item.className =
+                "note-item";
+
+
+            const time =
+                document.createElement("div");
+
+            time.className =
+                "note-time";
+
+            time.textContent =
+                "⏱ " +
+                (
+                    note.timestamp
+                    ||
+                    note.time
+                    ||
+                    "00:00"
+                );
+
+
+            const content =
+                document.createElement("div");
+
+            content.className =
+                "note-content";
+
+            content.textContent =
+                note.content
+                ||
+                "";
+
+
+            item.appendChild(time);
+
+            item.appendChild(content);
+
+            notesList.appendChild(item);
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   SAVE NOTE
+============================================================ */
+
+if (saveNoteBtn) {
+
+    saveNoteBtn.addEventListener(
+        "click",
+        async function () {
+
+            const content =
+                noteContent.value.trim();
+
+
+            if (!content) {
+
+                showNoteMessage(
+                    "Please write a note first.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            if (!videoId || !studentId) {
+
+                showNoteMessage(
+                    "Student or video information is missing.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            const timestamp =
+                mainVideo
+                ? formatTime(mainVideo.currentTime)
+                : "00:00";
+
+
+            saveNoteBtn.disabled = true;
+
+            saveNoteBtn.textContent =
+                "Saving...";
+
+
+            const payload = {
+
+                video_id: videoId,
+
+                student_id: studentId,
+
+                timestamp: timestamp,
+
+                content: content
+
+            };
+
+
+            console.log(
+                "Saving note:",
+                payload
+            );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/video/${videoId}/notes`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(payload)
+                        }
+                    );
+
+
+                const responseText =
+                    await response.text();
+
+
+                console.log(
+                    "Save note response:",
+                    response.status,
+                    responseText
+                );
+
+
+                if (!response.ok) {
+
+                    let message =
+                        "Unable to save note.";
+
+                    try {
+
+                        const errorData =
+                            JSON.parse(responseText);
+
+                        if (errorData.detail) {
+                            message =
+                                errorData.detail;
+                        }
+
+                    }
+                    catch (e) {
+                        // Keep default message
+                    }
+
+
+                    throw new Error(message);
+
+                }
+
+
+                noteContent.value = "";
+
+
+                showNoteMessage(
+                    "Note saved successfully."
+                );
+
+
+                await loadNotes();
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Save note error:",
+                    error
+                );
+
+
+                showNoteMessage(
+                    error.message ||
+                    "Unable to save note.",
+                    "error"
+                );
+
+            }
+            finally {
+
+                saveNoteBtn.disabled = false;
+
+                saveNoteBtn.textContent =
+                    "Save Note";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   COMMENTS
+============================================================ */
+
+const commentForm =
+    document.getElementById("commentForm");
+
+const commentInput =
+    document.getElementById("commentInput");
+
+const commentsList =
+    document.getElementById("commentsList");
+
+const commentMessage =
+    document.getElementById("commentMessage");
+
+
+function showCommentMessage(
+    message,
+    type = "success"
+) {
+
+    if (!commentMessage) {
+        return;
+    }
+
+
+    commentMessage.textContent =
+        message;
+
+    commentMessage.className =
+        "message " + type;
+
+
+    setTimeout(
+        function () {
+
+            commentMessage.className =
+                "message";
+
+        },
+        3000
+    );
+
+}
+
+
+/* ============================================================
+   LOAD COMMENTS
+============================================================ */
+
+async function loadComments() {
+
+    if (!videoId) {
+
+        commentsList.innerHTML =
+            '<div class="empty">No comments available.</div>';
+
+        return;
+    }
+
+
+    try {
+
+        /*
+           IMPORTANT FIX:
+
+           Old code was doing POST here and was
+           sending an undefined "text".
+
+           Loading comments MUST be GET.
+        */
+
+        const response =
+            await fetch(
+                `/video/${videoId}/comments`,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const responseText =
+            await response.text();
+
+
+        console.log(
+            "Load comments response:",
+            response.status,
+            responseText
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Unable to load comments: ${response.status}`
+            );
+
+        }
+
+
+        let data;
+
+        try {
+
+            data =
+                responseText
+                ? JSON.parse(responseText)
+                : [];
+
+        }
+        catch (jsonError) {
+
+            console.error(
+                "Invalid comments JSON:",
+                jsonError
+            );
+
+            throw new Error(
+                "Invalid comments response"
+            );
+
+        }
+
+
+        let comments = data;
+
+
+        if (
+            data
+            &&
+            Array.isArray(data.comments)
+        ) {
+
+            comments =
+                data.comments;
+
+        }
+
+
+        if (!Array.isArray(comments)) {
+            comments = [];
+        }
+
+
+        renderComments(comments);
+
+    }
+    catch (error) {
+
+        console.error(
+            "Comments loading error:",
+            error
+        );
+
+
+        commentsList.innerHTML =
+            '<div class="empty">Unable to load comments.</div>';
+
+    }
+
+}
+
+
+/* ============================================================
+   RENDER COMMENTS
+============================================================ */
+
+function renderComments(comments) {
+
+    if (
+        !Array.isArray(comments)
+        ||
+        comments.length === 0
+    ) {
+
+        commentsList.innerHTML =
+            '<div class="empty">No comments yet.</div>';
+
+        return;
+    }
+
+
+    commentsList.innerHTML = "";
+
+
+    comments.forEach(
+        function (comment) {
+
+            const box =
+                document.createElement("div");
+
+            box.className =
+                "comment";
+
+
+            const username =
+                document.createElement("div");
+
+            username.className =
+                "comment-user";
+
+            username.textContent =
+                comment.username
+                ||
+                comment.user_name
+                ||
+                comment.full_name
+                ||
+                "Student";
+
+
+            const text =
+                document.createElement("div");
+
+            text.className =
+                "comment-text";
+
+            text.textContent =
+                comment.text
+                ||
+                comment.content
+                ||
+                "";
+
+
+            const date =
+                document.createElement("div");
+
+            date.className =
+                "comment-date";
+
+            date.textContent =
+                comment.created_at
+                ||
+                comment.createdAt
+                ||
+                "";
+
+
+            box.appendChild(username);
+
+            box.appendChild(text);
+
+            box.appendChild(date);
+
+            commentsList.appendChild(box);
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   POST COMMENT
+============================================================ */
+
+if (commentForm) {
+
+    commentForm.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+
+            const text =
+                commentInput.value.trim();
+
+
+            if (!text) {
+
+                showCommentMessage(
+                    "Please write a comment.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            if (!videoId || !studentId) {
+
+                showCommentMessage(
+                    "Student or video information is missing.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            const submitButton =
+                commentForm.querySelector(
+                    "button[type='submit']"
+                );
+
+
+            submitButton.disabled = true;
+
+            submitButton.textContent =
+                "Posting...";
+
+
+            try {
+
+                /*
+                   Send the video comment.
+
+                   We keep the fields flexible because
+                   your backend has used both CommentCreate
+                   and video-specific fields.
+                */
+
+                const payload = {
+
+                    video_id:
+                        videoId,
+
+                    student_id:
+                        studentId,
+
+                    user_id:
+                        studentId,
+
+                    content:
+                        text,
+
+                    text:
+                        text
+
+                };
+
+
+                console.log(
+                    "Posting comment:",
+                    payload
+                );
+
+
+                const response =
+                    await fetch(
+                        `/video/${videoId}/comments`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(payload)
+                        }
+                    );
+
+
+                const responseText =
+                    await response.text();
+
+
+                console.log(
+                    "Post comment response:",
+                    response.status,
+                    responseText
+                );
+
+
+                if (!response.ok) {
+
+                    let errorMessage =
+                        `Comment failed: ${response.status}`;
+
+                    try {
+
+                        const errorData =
+                            JSON.parse(responseText);
+
+                        if (errorData.detail) {
+
+                            if (
+                                Array.isArray(
+                                    errorData.detail
+                                )
+                            ) {
+
+                                errorMessage =
+                                    errorData.detail
+                                        .map(
+                                            item =>
+                                                item.msg
+                                                ||
+                                                String(item)
+                                        )
+                                        .join(", ");
+
+                            }
+                            else {
+
+                                errorMessage =
+                                    errorData.detail;
+
+                            }
+
+                        }
+
+                    }
+                    catch (e) {
+                        // Keep status message
+                    }
+
+
+                    throw new Error(
+                        errorMessage
+                    );
+
+                }
+
+
+                commentInput.value = "";
+
+
+                showCommentMessage(
+                    "Comment posted successfully."
+                );
+
+
+                await loadComments();
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Post comment error:",
+                    error
+                );
+
+
+                showCommentMessage(
+                    error.message ||
+                    "Unable to post comment.",
+                    "error"
+                );
+
+            }
+            finally {
+
+                submitButton.disabled = false;
+
+                submitButton.textContent =
+                    "Post Comment";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   LIKES
+============================================================ */
+
+const likeBtn =
+    document.getElementById("likeBtn");
+
+const likeCount =
+    document.getElementById("likeCount");
+
+const likeCountAction =
+    document.getElementById("likeCountAction");
+
+const likeMessage =
+    document.getElementById("likeMessage");
+
+
+function showLikeMessage(
+    message,
+    type = "success"
+) {
+
+    if (!likeMessage) {
+        return;
+    }
+
+
+    likeMessage.textContent =
+        message;
+
+    likeMessage.className =
+        "message " + type;
+
+
+    setTimeout(
+        function () {
+
+            likeMessage.className =
+                "message";
+
+        },
+        3000
+    );
+
+}
+
+
+/* ============================================================
+   UPDATE LIKE COUNT
+============================================================ */
+
+function updateLikeCount(count) {
+
+    count =
+        Number(count) || 0;
+
+
+    if (likeCount) {
+
+        likeCount.textContent =
+            count;
+
+    }
+
+
+    if (likeCountAction) {
+
+        likeCountAction.textContent =
+            count;
+
+    }
+
+}
+
+
+/* ============================================================
+   CHECK LIKE STATUS
+============================================================ */
+
+async function loadLikeStatus() {
+
+    if (!videoId || !studentId) {
+        return;
+    }
+
+
+    const possibleUrls = [
+
+        `/video/${videoId}/like/status?user_id=${studentId}`,
+
+        `/video/${videoId}/likes/status?user_id=${studentId}`
+
+    ];
+
+
+    for (
+        const url of possibleUrls
+    ) {
+
+        try {
+
+            const response =
+                await fetch(url);
+
+
+            if (!response.ok) {
+                continue;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const liked =
+                Boolean(
+                    data.liked
+                    ??
+                    data.is_liked
+                    ??
+                    false
+                );
+
+
+            if (likeBtn && liked) {
+
+                likeBtn.classList.add(
+                    "liked"
+                );
+
+                likeBtn.textContent =
+                    "❤️ Liked";
+
+            }
+
+
+            if (
+                data.likes !== undefined
+            ) {
+
+                updateLikeCount(
+                    data.likes
+                );
+
+            }
+
+
+            return;
+
+        }
+        catch (error) {
+
+            console.log(
+                "Like status endpoint not available:",
+                url
+            );
+
+        }
+
+    }
+
+}
+
+
+/* ============================================================
+   LIKE / UNLIKE
+============================================================ */
+
+if (likeBtn) {
+
+    likeBtn.addEventListener(
+        "click",
+        async function () {
+
+            if (!videoId || !studentId) {
+
+                showLikeMessage(
+                    "Student or video information is missing.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            likeBtn.disabled = true;
+
+
+            const currentlyLiked =
+                likeBtn.classList.contains(
+                    "liked"
+                );
+
+
+            try {
+
+                const method =
+                    currentlyLiked
+                    ? "DELETE"
+                    : "POST";
+
+
+                const response =
+                    await fetch(
+                        `/video/${videoId}/like`,
+                        {
+                            method:
+                                method,
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    video_id:
+                                        videoId,
+
+                                    user_id:
+                                        studentId,
+
+                                    student_id:
+                                        studentId
+
+                                })
+                        }
+                    );
+
+
+                const responseText =
+                    await response.text();
+
+
+                console.log(
+                    "Like response:",
+                    response.status,
+                    responseText
+                );
+
+
+                if (!response.ok) {
+
+                    let errorMessage =
+                        `Like request failed: ${response.status}`;
+
+                    try {
+
+                        const errorData =
+                            JSON.parse(responseText);
+
+                        if (errorData.detail) {
+
+                            errorMessage =
+                                Array.isArray(
+                                    errorData.detail
+                                )
+                                ? errorData.detail
+                                    .map(
+                                        item =>
+                                            item.msg
+                                            ||
+                                            String(item)
+                                    )
+                                    .join(", ")
+                                : errorData.detail;
+
+                        }
+
+                    }
+                    catch (e) {
+                        // Keep default message
+                    }
+
+
+                    throw new Error(
+                        errorMessage
+                    );
+
+                }
+
+
+                let data = {};
+
+
+                try {
+
+                    data =
+                        responseText
+                        ? JSON.parse(responseText)
+                        : {};
+
+                }
+                catch (e) {
+
+                    data = {};
+
+                }
+
+
+                if (
+                    data.likes !== undefined
+                ) {
+
+                    updateLikeCount(
+                        data.likes
+                    );
+
+                }
+                else if (
+                    data.like_count !== undefined
+                ) {
+
+                    updateLikeCount(
+                        data.like_count
+                    );
+
+                }
+                else {
+
+                    const oldCount =
+                        Number(
+                            likeCountAction
+                            ? likeCountAction.textContent
+                            : 0
+                        );
+
+
+                    updateLikeCount(
+                        currentlyLiked
+                        ? Math.max(
+                            0,
+                            oldCount - 1
+                        )
+                        : oldCount + 1
+                    );
+
+                }
+
+
+                if (method === "POST") {
+
+                    likeBtn.classList.add(
+                        "liked"
+                    );
+
+                    likeBtn.textContent =
+                        "❤️ Liked";
+
+
+                    showLikeMessage(
+                        "Video liked."
+                    );
+
+                }
+                else {
+
+                    likeBtn.classList.remove(
+                        "liked"
+                    );
+
+                    likeBtn.textContent =
+                        "👍 Like";
+
+
+                    showLikeMessage(
+                        "Like removed."
+                    );
+
+                }
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Like error:",
+                    error
+                );
+
+
+                showLikeMessage(
+                    error.message ||
+                    "Unable to update like.",
+                    "error"
+                );
+
+            }
+            finally {
+
+                likeBtn.disabled = false;
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   INITIAL LOAD
+============================================================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        console.log(
+            "EduNote video watch page loaded."
+        );
+
+        console.log(
+            "videoId:",
+            videoId
+        );
+
+        console.log(
+            "studentId:",
+            studentId
+        );
+
+        console.log(
+            "USER_ID:",
+            USER_ID
+        );
+
+
+        loadNotes();
+
+        loadComments();
+
+        loadLikeStatus();
+
+    }
+);
+
+</script>
+
+</body>
+</html>
