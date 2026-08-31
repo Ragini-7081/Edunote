@@ -495,101 +495,24 @@
         >
 
 
-            <label class="method">
+            <label class="method selected">
 
                 <input
                     type="radio"
                     name="payment_method"
-                    value="UPI"
+                    value="Razorpay"
                     required
+                    checked
                 >
 
                 <div>
 
                     <strong>
-                        📱 UPI
+                        💳 Razorpay
                     </strong>
 
                     <small>
-                        Google Pay, PhonePe, Paytm, etc.
-                    </small>
-
-                </div>
-
-            </label>
-
-            <label class="method">
-
-                <input
-                    type="radio"
-                    name="payment_method"
-                    value="Demo QR Scan"
-                >
-
-                <div>
-
-                    <strong>
-                        📷 Scan Demo QR
-                    </strong>
-
-                    <small>
-                        Practice payment screen — no real payment is made
-                    </small>
-
-                </div>
-
-            </label>
-
-            <div class="demo-qr-panel" id="demoQrPanel" aria-live="polite">
-                <div class="demo-qr" aria-label="Demo QR code"></div>
-                <div>
-                    <strong>Demo payment scanner</strong>
-                    <p>This is a visual practice QR code. Select this method, then use the normal Pay button to continue the existing demo checkout.</p>
-                </div>
-            </div>
-
-
-
-            <label class="method">
-
-                <input
-                    type="radio"
-                    name="payment_method"
-                    value="Card"
-                >
-
-                <div>
-
-                    <strong>
-                        💳 Debit / Credit Card
-                    </strong>
-
-                    <small>
-                        Visa, Mastercard and other cards
-                    </small>
-
-                </div>
-
-            </label>
-
-
-
-            <label class="method">
-
-                <input
-                    type="radio"
-                    name="payment_method"
-                    value="Net Banking"
-                >
-
-                <div>
-
-                    <strong>
-                        🏦 Net Banking
-                    </strong>
-
-                    <small>
-                        Pay using your bank account
+                        UPI, cards, net banking, and wallets
                     </small>
 
                 </div>
@@ -653,11 +576,11 @@
         by your FastAPI backend.
     */
 
-    const userId = {{ user_id | default(0) | tojson }};
+    const userId = Number("{{ user_id | default(0) }}") || 0;
 
-    const bookId = {{ book_id | default(0) | tojson }};
+    const bookId = Number("{{ book_id | default(0) }}") || 0;
 
-    const bookPrice = {{ (book.price or 0) | tojson }};
+    const bookPrice = Number("{{ (book.price or 0) }}") || 0;
 
 
 

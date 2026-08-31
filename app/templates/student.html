@@ -1488,107 +1488,133 @@ body{
 ========================================================= */
 
 @media(max-width:1200px){
-
     .analytics-row{
         grid-template-columns:1fr;
     }
-
     .stats-grid{
         grid-template-columns:repeat(2,1fr);
     }
-
     .student-video-grid{
-        grid-template-columns:
-            repeat(2,minmax(0,1fr));
+        grid-template-columns:repeat(2,minmax(0,1fr));
     }
-
 }
 
 @media(max-width:900px){
-
-    .sidebar{
-        width:68px;
+    .mobile-menu-btn{
+        display:inline-flex;
     }
-
-    .brand p,
-    .brand h2,
-    .nav-label,
-    .menu li a span:not(.icon),
-    .sidebar-footer a span:not(:first-child){
+    .sidebar{
+        position:fixed;
+        left:-290px;
+        top:0;
+        bottom:0;
+        width:280px;
+        height:100vh;
+        height:100dvh;
+        z-index:1000;
+        transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow:4px 0 25px rgba(0,0,0,0.3);
+    }
+    .sidebar.open{
+        left:0;
+    }
+    .main-content{
+        margin-left:0 !important;
+        width:100%;
+        max-width:100vw;
+    }
+    .topbar{
+        padding:10px 16px;
+        gap:12px;
+    }
+    .search-wrap{
+        max-width:100%;
+    }
+    .av-info{
         display:none;
     }
-
-    .brand{
-        padding:16px;
-        justify-content:center;
-    }
-
-    .menu li a{
-        padding:13px;
-        justify-content:center;
-    }
-
-    .main-content{
-        margin-left:68px;
-    }
-
     .page{
         padding:16px 14px;
     }
-
     .books-grid{
-        grid-template-columns:
-            repeat(
-                auto-fill,
-                minmax(170px,1fr)
-            );
+        grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+        gap:14px;
     }
-
     .student-video-grid{
-        grid-template-columns:
-            repeat(2,minmax(0,1fr));
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:14px;
     }
-
 }
 
 @media(max-width:600px){
-
-    .stats-grid{
-        grid-template-columns:1fr 1fr;
+    .topbar{
+        padding:10px 12px;
     }
-
+    .search-wrap input{
+        padding:8px 12px 8px 34px;
+        font-size:12px;
+    }
+    .stats-grid{
+        grid-template-columns:repeat(2, 1fr);
+        gap:10px;
+    }
+    .stat-card{
+        padding:14px 12px;
+    }
+    .stat-card h3{
+        font-size:18px;
+    }
     .banner{
         flex-direction:column;
-        gap:16px;
-        text-align:center;
+        gap:14px;
+        text-align:left;
+        padding:20px 16px;
     }
-
+    .banner h1{
+        font-size:20px;
+    }
     .banner::before{
         display:none;
     }
-
-    .topbar{
-        padding:12px 16px;
+    .books-grid{
+        grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+        gap:12px;
     }
-
+    .book-card{
+        border-radius:12px;
+    }
     .student-video-grid{
         grid-template-columns:1fr;
+        gap:14px;
     }
-
-    .student-video-header{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:10px;
-    }
-
     .student-video-thumbnail{
-        height:200px;
+        height:190px;
     }
-
+    .filter-tabs{
+        display:flex;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+        padding-bottom:4px;
+        gap:8px;
+    }
+    .filter-tabs::-webkit-scrollbar{
+        display:none;
+    }
+    .filter-tab{
+        white-space:nowrap;
+        padding:7px 14px;
+        font-size:12px;
+    }
+    .payment-modal, .pdf-modal-content, .video-modal-content{
+        width:min(440px, 94vw);
+        max-height:92vh;
+        margin:10px;
+        padding:18px 16px;
+    }
     .payment-actions{
         flex-direction:column;
     }
-
 }
 
 </style>
@@ -1598,11 +1624,13 @@ body{
 
 <body>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
 <!-- =========================================================
      SIDEBAR
 ========================================================= -->
 
-<aside class="sidebar">
+<aside class="sidebar" id="appSidebar">
 
     <div class="brand">
 
@@ -1720,6 +1748,16 @@ body{
 <div class="main-content">
 
     <div class="topbar">
+
+        <button
+            type="button"
+            class="mobile-menu-btn"
+            id="mobileMenuBtn"
+            onclick="toggleMobileSidebar()"
+            aria-label="Toggle Navigation Menu"
+        >
+            ☰
+        </button>
 
         <div class="search-wrap">
 
@@ -2122,16 +2160,12 @@ body{
             id="paymentMethod"
         >
 
-            <option value="UPI">
-                UPI
+            <option value="PayU" selected>
+                🛡️ PayU (Cards, Net Banking, UPI, Wallets)
             </option>
 
-            <option value="Card">
-                Debit / Credit Card
-            </option>
-
-            <option value="Net Banking">
-                Net Banking
+            <option value="Razorpay">
+                💳 Razorpay (Cards, UPI, QR, Net Banking)
             </option>
 
         </select>
@@ -2166,14 +2200,14 @@ body{
 
 </div>
 
-
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 
 /* =========================================================
    STUDENT INFORMATION
 ========================================================= */
 
-const STUDENT_ID = {{ user.id }};
+const STUDENT_ID = Number("{{ user.id }}") || 0;
 
 
 /* =========================================================
@@ -2228,6 +2262,24 @@ let searchQ = "";
 let chartBuilt = false;
 
 let currentPurchase = null;
+let razorpayConfig = { enabled: false, key_id: "" };
+
+async function loadRazorpayConfig() {
+    try {
+        const response = await fetch("/payment/razorpay/config");
+        const data = await response.json().catch(() => ({}));
+        razorpayConfig = {
+            enabled: !!(data && data.enabled),
+            key_id: (data && data.key_id) || ""
+        };
+    } catch (error) {
+        console.warn("Razorpay config unavailable:", error);
+        razorpayConfig = { enabled: false, key_id: "" };
+    }
+}
+
+loadRazorpayConfig();
+
 async function loadStats(){
 
     try{
@@ -3782,6 +3834,7 @@ function openPaymentModal(purchase){
         ).toFixed(2);
 
     status.innerText = "";
+    status.style.color = "";
 
     button.disabled = false;
 
@@ -3806,12 +3859,32 @@ function closePaymentModal(){
             "paymentOverlay"
         );
 
+    const button =
+        document.getElementById(
+            "paymentConfirmBtn"
+        );
+
+    const status =
+        document.getElementById(
+            "paymentStatus"
+        );
+
     if(overlay){
 
         overlay.classList.remove(
             "show"
         );
 
+    }
+
+    if(button){
+        button.disabled = false;
+        button.innerText = "Pay Now";
+    }
+
+    if(status){
+        status.innerText = "";
+        status.style.color = "";
     }
 
     currentPurchase =
@@ -3822,15 +3895,176 @@ function closePaymentModal(){
 
 /* =========================================================
    PAYMENT CONFIRMATION
-   FIXED TO MATCH main.py
 ========================================================= */
+
+async function handleRazorpayPayment(purchase, button, status) {
+    if (!razorpayConfig.enabled || typeof Razorpay === "undefined") {
+        throw new Error("Razorpay checkout is not available. Please configure the API keys.");
+    }
+
+    const orderPayload = {
+        amount: Number(purchase.amount),
+        payment_for: `Purchase ${purchase.type}: ${purchase.name}`,
+        item_id: Number(purchase.id),
+        item_type: purchase.type === "book" ? "book" : "video",
+        user_id: Number(STUDENT_ID)
+    };
+
+    status.style.color = "";
+    status.innerText = "Preparing Razorpay checkout...";
+
+    const orderResponse = await fetch("/payment/razorpay/order", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify(orderPayload)
+    });
+
+    const orderData = await orderResponse.json().catch(() => ({}));
+
+    if (!orderResponse.ok) {
+        throw new Error(orderData.detail || orderData.message || "Razorpay order could not be created.");
+    }
+
+    const rzp = new Razorpay({
+        key: orderData.key_id,
+        amount: Number(orderData.amount),
+        currency: orderData.currency || "INR",
+        name: "EduNote",
+        description: `Purchase ${purchase.type}: ${purchase.name}`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+            status.style.color = "";
+            status.innerText = "Verifying Razorpay payment...";
+
+            try {
+                const verifyResponse = await fetch("/payment/razorpay/verify", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        payment_id: Number(orderData.payment_id),
+                        order_id: response.razorpay_order_id,
+                        signature: response.razorpay_signature,
+                        razorpay_payment_id: response.razorpay_payment_id
+                    })
+                });
+
+                const verifyData = await verifyResponse.json().catch(() => ({}));
+
+                if (!verifyResponse.ok) {
+                    throw new Error(verifyData.detail || verifyData.message || "Payment verification failed.");
+                }
+
+                const paidPaymentId = Number(verifyData.payment_id || orderData.payment_id);
+                status.style.color = "#16a34a";
+                status.innerText = `Payment successful! Payment #${paidPaymentId}. Opening your item...`;
+                button.innerText = "Paid ✓";
+
+                setTimeout(() => {
+                    const next = purchase.afterPayment;
+                    closePaymentModal();
+                    if (typeof next === "function") {
+                        next();
+                    }
+                }, 700);
+            } catch (error) {
+                console.error("Razorpay verification error:", error);
+                status.style.color = "#dc2626";
+                status.innerText = error.message || "Razorpay payment verification failed.";
+                button.disabled = false;
+                button.innerText = "Pay Now";
+            }
+        },
+        prefill: {
+            name: "EduNote Student",
+            email: "student@edunote.app"
+        },
+        theme: {
+            color: "#0f766e"
+        },
+        modal: {
+            ondismiss: function () {
+                status.style.color = "#dc2626";
+                status.innerText = "Payment cancelled.";
+                button.disabled = false;
+                button.innerText = "Pay Now";
+            }
+        }
+    });
+
+    rzp.on('payment.failed', function (response) {
+        const errorDescription = response && response.error && response.error.description
+            ? response.error.description
+            : "Payment cancelled.";
+        status.style.color = "#dc2626";
+        status.innerText = errorDescription;
+        button.disabled = false;
+        button.innerText = "Pay Now";
+    });
+
+    rzp.open();
+}
+
+async function handlePayUPayment(purchase, button, status) {
+    const orderPayload = {
+        amount: Number(purchase.amount),
+        payment_for: `Purchase ${purchase.type}: ${purchase.name}`,
+        item_id: Number(purchase.id),
+        item_type: purchase.type === "book" ? "book" : "video",
+        user_id: Number(STUDENT_ID)
+    };
+
+    status.style.color = "";
+    status.innerText = "Connecting to PayU sandbox...";
+
+    const orderResponse = await fetch("/payment/payu/order", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify(orderPayload)
+    });
+
+    const orderData = await orderResponse.json().catch(() => ({}));
+
+    if (!orderResponse.ok || !orderData.params) {
+        throw new Error(orderData.detail || orderData.message || "PayU order could not be created.");
+    }
+
+    status.innerText = "Redirecting to PayU sandbox...";
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = orderData.action_url;
+    form.style.display = "none";
+
+    for (const key in orderData.params) {
+        if (Object.prototype.hasOwnProperty.call(orderData.params, key)) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = orderData.params[key];
+            form.appendChild(input);
+        }
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
 
 async function confirmPurchase(){
 
     if(!currentPurchase){
-
         return;
-
     }
 
     const button =
@@ -3849,270 +4083,51 @@ async function confirmPurchase(){
         ).value;
 
     if(!method){
-
-        status.innerText =
-            "Please select a payment method.";
-
+        status.style.color = "#dc2626";
+        status.innerText = "Please select a payment method.";
         return;
-
     }
 
-    button.disabled = true;
+    if (method === "PayU") {
+        button.disabled = true;
+        button.innerText = "Opening PayU...";
+        status.style.color = "";
+        status.innerText = "Connecting to PayU...";
 
-    button.innerText =
-        "Processing...";
-
-    status.innerText =
-        "Creating your payment...";
-
-    try{
-
-        const purchase =
-            currentPurchase;
-
-
-        /*
-         * IMPORTANT:
-         *
-         * main.py /payment/create expects:
-         *
-         * amount
-         * payment_for
-         * item_id
-         * item_type
-         *
-         * Do NOT send student_id, seller_id,
-         * product_type, product_id, etc.
-         */
-
-        const createResponse =
-            await fetch(
-                "/payment/create",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json",
-
-                        "Accept":
-                            "application/json"
-                    },
-
-                    credentials:"include",
-
-                    body:JSON.stringify({
-
-                        amount:
-                            Number(
-                                purchase.amount
-                            ),
-
-                        payment_for:
-                            `Purchase ${purchase.type}: ${purchase.name}`,
-
-                        item_id:
-                            Number(
-                                purchase.id
-                            ),
-
-                        item_type:
-                            purchase.type === "book"
-                            ? "book"
-                            : "video"
-
-                    })
-
-                }
-            );
-
-
-        const createData =
-            await createResponse
-                .json()
-                .catch(
-                    () => ({})
-                );
-
-
-        if(!createResponse.ok){
-
-            if(
-                createResponse.status ===
-                401
-            ){
-
-                throw new Error(
-                    "Your login session has expired. Please login again."
-                );
-
-            }
-
-            throw new Error(
-                createData.detail ||
-                createData.message ||
-                "Payment could not be created."
-            );
-
+        try {
+            await handlePayUPayment(currentPurchase, button, status);
+            return;
+        } catch (error) {
+            console.error("PayU setup error:", error);
+            status.style.color = "#dc2626";
+            status.innerText = error.message || "PayU checkout could not be started.";
+            button.disabled = false;
+            button.innerText = "Pay Now";
+            return;
         }
-
-
-        const paymentId =
-            Number(
-                createData.payment_id
-            );
-
-
-        if(!paymentId){
-
-            throw new Error(
-                "Payment ID was not returned by the server."
-            );
-
-        }
-
-
-        status.innerText =
-            "Payment created. Confirming payment...";
-
-
-        /*
-         * main.py confirms payment using:
-         *
-         * POST /payment/{payment_id}/status
-         *
-         * Query parameters:
-         * status
-         * payment_method
-         * transaction_id
-         */
-
-        const params =
-            new URLSearchParams({
-
-                status:
-                    "Success",
-
-                payment_method:
-                    method,
-
-                transaction_id:
-                    "EDUNOTE-" +
-                    Date.now()
-
-            });
-
-
-        const statusResponse =
-            await fetch(
-                `/payment/${paymentId}/status?${params.toString()}`,
-                {
-                    method:"POST",
-
-                    credentials:"include",
-
-                    headers:{
-                        "Accept":
-                            "application/json"
-                    }
-                }
-            );
-
-
-        const statusData =
-            await statusResponse
-                .json()
-                .catch(
-                    () => ({})
-                );
-
-
-        if(!statusResponse.ok){
-
-            if(
-                statusResponse.status ===
-                401
-            ){
-
-                throw new Error(
-                    "Your login session has expired. Please login again."
-                );
-
-            }
-
-            let errorMessage = "Payment could not be created.";
-
-if (Array.isArray(createData.detail)) {
-    errorMessage = createData.detail
-        .map(error => {
-            const field =
-                Array.isArray(error.loc)
-                    ? error.loc.join(".")
-                    : "field";
-
-            return `${field}: ${error.msg || "Invalid value"}`;
-        })
-        .join(" | ");
-}
-else if (typeof createData.detail === "string") {
-    errorMessage = createData.detail;
-}
-else if (createData.message) {
-    errorMessage = createData.message;
-}
-
-throw new Error(errorMessage);
-        }
-
-
-        status.innerText =
-            `Payment successful! Payment #${paymentId}. Opening your item...`;
-
-        button.innerText =
-            "Paid ✓";
-
-
-        setTimeout(
-            () => {
-
-                const next =
-                    purchase.afterPayment;
-
-                closePaymentModal();
-
-                if(
-                    typeof next ===
-                    "function"
-                ){
-
-                    next();
-
-                }
-
-            },
-            700
-        );
-
-
-    }catch(error){
-
-        console.error(
-            "Payment error:",
-            error
-        );
-
-        status.innerText =
-            error.message ||
-            "Payment failed.";
-
-        button.disabled =
-            false;
-
-        button.innerText =
-            "Try Again";
-
     }
 
+    if (method === "Razorpay") {
+        button.disabled = true;
+        button.innerText = "Opening Razorpay...";
+        status.style.color = "";
+        status.innerText = "Preparing Razorpay checkout...";
+
+        try {
+            await handleRazorpayPayment(currentPurchase, button, status);
+            return;
+        } catch (error) {
+            console.error("Razorpay setup error:", error);
+            status.style.color = "#dc2626";
+            status.innerText = error.message || "Razorpay checkout could not be started.";
+            button.disabled = false;
+            button.innerText = "Pay Now";
+            return;
+        }
+    }
+
+    status.style.color = "#dc2626";
+    status.innerText = "Please select either PayU or Razorpay.";
 }
 
 
@@ -4182,6 +4197,26 @@ function escapeAttribute(
 }
 
 
+function toggleMobileSidebar(forced){
+    const sidebar = document.getElementById("appSidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    if(!sidebar) return;
+    const shouldOpen = (typeof forced === "boolean") ? forced : !sidebar.classList.contains("open");
+    sidebar.classList.toggle("open", shouldOpen);
+    if(backdrop){
+        backdrop.classList.toggle("active", shouldOpen);
+    }
+}
+
+// Auto close mobile drawer when navigation links are clicked
+document.querySelectorAll(".sidebar .menu a, .sidebar-footer a").forEach(link => {
+    link.addEventListener("click", () => {
+        if(window.innerWidth <= 900){
+            toggleMobileSidebar(false);
+        }
+    });
+});
+
 /* =========================================================
    INITIALIZE
 ========================================================= */
@@ -4191,6 +4226,17 @@ loadStats();
 loadBooks();
 
 loadStudentVideos();
+
+// Handle PayU return status notifications
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("payment") === "success") {
+    alert("🎉 Payment Successful! Your item access has been unlocked.");
+    window.history.replaceState({}, document.title, window.location.pathname);
+} else if (urlParams.get("payment") === "cancelled") {
+    alert("⚠️ Payment was cancelled or failed. No charges were made.");
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 
 </script>
 

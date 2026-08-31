@@ -66,21 +66,40 @@ body{background:var(--bg);color:var(--text);}
 
 @media(max-width:1100px){.charts-row{grid-template-columns:1fr;} .stats-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:900px){
-  .sidebar{width:70px;}
-  .brand p,.brand h2,.nav-label,.menu li a span:last-child,.sidebar-footer a span:last-child{display:none;}
-  .brand{padding:20px 12px;justify-content:center;}
-  .menu li a{padding:14px;justify-content:center;}
-  .main-content{margin-left:70px;}
-  .page{padding:18px;}
-  .stats-grid{grid-template-columns:1fr 1fr;}
+  .mobile-menu-btn{display:inline-flex;}
+  .sidebar{
+    position:fixed;
+    left:-290px;
+    top:0;
+    bottom:0;
+    width:280px;
+    height:100vh;
+    height:100dvh;
+    z-index:1000;
+    transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:4px 0 25px rgba(0,0,0,0.3);
+  }
+  .sidebar.open{left:0;}
+  .main-content{margin-left:0 !important;width:100%;max-width:100vw;}
+  .page{padding:16px 14px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .topbar{padding:10px 16px;}
+}
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stat-card{padding:14px 12px;}
+  .stat-card h2{font-size:20px;}
+  .table-card{padding:16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 }
 </style>
 <link rel="stylesheet" href="/static/student-theme.css">
 </head>
 <body>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="appSidebar">
   <div class="brand">
     <div class="brand-icon">📚</div>
     <div><h2>EduNote</h2><p>Author Workspace</p></div>
@@ -102,8 +121,11 @@ body{background:var(--bg);color:var(--text);}
 
 <div class="main-content">
   <div class="topbar">
-    <h2>💰 Earnings Overview</h2>
-    <a href="/author/{{ user.id }}">← Dashboard</a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()" aria-label="Toggle Menu">☰</button>
+      <h2 style="font-size:18px;">💰 Earnings Overview</h2>
+    </div>
+    <a href="/author/{{ user.id }}" style="font-size:13px;color:#64748b;text-decoration:none;">← Dashboard</a>
   </div>
 
   <div class="page">
@@ -166,7 +188,7 @@ body{background:var(--bg);color:var(--text);}
 </div>
 
 <script>
-const AUTHOR_ID = {{ user.id }};
+const AUTHOR_ID = Number("{{ user.id }}") || 0;
 
 async function loadEarnings() {
   const res   = await fetch(`/author/${AUTHOR_ID}/books`);
@@ -240,6 +262,26 @@ async function loadEarnings() {
     }
   });
 }
+
+function toggleMobileSidebar(forced){
+  const sidebar = document.getElementById("appSidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if(!sidebar) return;
+  const shouldOpen = (typeof forced === "boolean") ? forced : !sidebar.classList.contains("open");
+  sidebar.classList.toggle("open", shouldOpen);
+  if(backdrop){
+    backdrop.classList.toggle("active", shouldOpen);
+  }
+}
+
+// Auto close on navigation
+document.querySelectorAll(".sidebar .menu a, .sidebar-footer a").forEach(link => {
+  link.addEventListener("click", () => {
+    if(window.innerWidth <= 900){
+      toggleMobileSidebar(false);
+    }
+  });
+});
 
 loadEarnings();
 </script>

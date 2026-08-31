@@ -303,27 +303,47 @@ body{background:var(--bg);color:var(--text);}
   .row-2{grid-template-columns:1fr;}
 }
 @media(max-width:900px){
-  .sidebar{width:70px;}
-  .brand p,.brand h2,.nav-label,.menu li a span,.sidebar-footer a span{display:none;}
-  .brand{padding:20px 12px;justify-content:center;}
-  .menu li a{padding:14px;justify-content:center;}
-  .main-content{margin-left:70px;}
+  .mobile-menu-btn{display:inline-flex;}
+  .sidebar{
+    position:fixed;
+    left:-290px;
+    top:0;
+    bottom:0;
+    width:280px;
+    height:100vh;
+    height:100dvh;
+    z-index:1000;
+    transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:4px 0 25px rgba(0,0,0,0.3);
+  }
+  .sidebar.open{left:0;}
+  .main-content{margin-left:0 !important;width:100%;max-width:100vw;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .topbar{padding:14px 20px;}
-  .search-wrap input{width:220px;}
+  .topbar{padding:10px 16px;gap:12px;}
+  .search-wrap{max-width:100%;}
+  .search-wrap input{width:100%;}
+  .avatar-info{display:none;}
+  .page{padding:16px 14px;}
+  .welcome-banner{flex-direction:column;gap:16px;padding:20px 16px;align-items:flex-start;}
 }
 @media(max-width:600px){
-  .stats-grid{grid-template-columns:1fr 1fr;}
-  .page{padding:18px;}
-  .welcome-banner{flex-direction:column;gap:20px;text-align:center;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stat-card{padding:14px 12px;}
+  .stat-card h2{font-size:20px;}
+  .welcome-actions{flex-direction:column;width:100%;gap:10px;}
+  .welcome-actions a{width:100%;text-align:center;}
+  .section-header{flex-direction:column;align-items:flex-start;gap:8px;}
+  .table-wrap, .books-table{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 }
 </style>
 <link rel="stylesheet" href="/static/student-theme.css">
 </head>
 <body>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
 <!-- ===================== SIDEBAR ===================== -->
-<aside class="sidebar">
+<aside class="sidebar" id="appSidebar">
   <div class="brand">
     <div class="brand-icon">📚</div>
     <div>
@@ -381,6 +401,15 @@ body{background:var(--bg);color:var(--text);}
 
   <!-- TOPBAR -->
   <div class="topbar">
+    <button
+      type="button"
+      class="mobile-menu-btn"
+      id="mobileMenuBtn"
+      onclick="toggleMobileSidebar()"
+      aria-label="Toggle Navigation Menu"
+    >
+      ☰
+    </button>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input type="text" id="globalSearch" placeholder="Search books, analytics...">
@@ -747,7 +776,7 @@ body{background:var(--bg);color:var(--text);}
 </style>
 
 <script>
-const AUTHOR_ID = {{ user.id }};
+const AUTHOR_ID = Number("{{ user.id }}") || 0;
 
 // Avatar initial
 const name = "{{ user.full_name }}";
@@ -986,6 +1015,26 @@ async function loadRecentComments() {
       </div>`).join("");
   } catch(e) { console.error("Comments error:", e); }
 }
+
+function toggleMobileSidebar(forced){
+  const sidebar = document.getElementById("appSidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if(!sidebar) return;
+  const shouldOpen = (typeof forced === "boolean") ? forced : !sidebar.classList.contains("open");
+  sidebar.classList.toggle("open", shouldOpen);
+  if(backdrop){
+    backdrop.classList.toggle("active", shouldOpen);
+  }
+}
+
+// Auto close mobile drawer on click
+document.querySelectorAll(".sidebar .menu a, .sidebar-footer a").forEach(link => {
+  link.addEventListener("click", () => {
+    if(window.innerWidth <= 900){
+      toggleMobileSidebar(false);
+    }
+  });
+});
 
 // Init
 loadStats();

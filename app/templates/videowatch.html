@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-```
-<title>{{ video.title if video else "Watch Video" }} - EduNote</title>
-
-<style>
+    <title>{{ video.title if video else "Watch Video" }} - EduNote</title>
+    <link rel="stylesheet" href="/static/student-theme.css">
+    <style>
     * {
         box-sizing: border-box;
         margin: 0;
@@ -395,7 +392,6 @@
         }
     }
 </style>
-```
 
 <link rel="stylesheet" href="/static/student-theme.css">
 </head>
@@ -404,7 +400,6 @@
 
 <header class="topbar">
 
-```
 <a href="/" class="logo">
     EduNote
 </a>
@@ -412,13 +407,11 @@
 <a href="javascript:history.back()" class="back-btn">
     ← Back
 </a>
-```
 
 </header>
 
 <main class="page-container">
 
-```
 <div class="watch-layout">
 
     <section class="video-card">
@@ -657,7 +650,6 @@
     </aside>
 
 </div>
-```
 
 </main>
 
@@ -667,9 +659,7 @@
    IDs
 ============================================================ */
 
-const videoId = Number(
-    {{ video.id if video else 0 }}
-);
+const videoId = Number("{{ video.id if video else 0 }}") || 0;
 
 /*
    IMPORTANT FIX:
@@ -681,9 +671,7 @@ const videoId = Number(
    passed by FastAPI/Jinja.
 */
 
-const USER_ID = Number(
-    {{ user_id | default(student_id | default(0)) }}
-);
+const USER_ID = Number("{{ user_id | default(student_id | default(0)) }}") || 0;
 
 const studentId = USER_ID;
 

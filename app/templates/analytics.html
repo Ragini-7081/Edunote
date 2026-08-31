@@ -71,20 +71,41 @@ canvas{max-width:100%;}
   .summary-grid{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:900px){
-  .sidebar{width:70px;}
-  .brand p,.brand h2,.nav-label,.menu li a span:last-child,.sidebar-footer a span:last-child{display:none;}
-  .brand{padding:20px 12px;justify-content:center;}
-  .menu li a{padding:14px;justify-content:center;}
-  .main-content{margin-left:70px;}
+  .mobile-menu-btn{display:inline-flex;}
+  .sidebar{
+    position:fixed;
+    left:-290px;
+    top:0;
+    bottom:0;
+    width:280px;
+    height:100vh;
+    height:100dvh;
+    z-index:1000;
+    transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:4px 0 25px rgba(0,0,0,0.3);
+  }
+  .sidebar.open{left:0;}
+  .main-content{margin-left:0 !important;width:100%;max-width:100vw;}
+  .page{padding:16px 14px;}
   .charts-row{grid-template-columns:1fr;}
+  .summary-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .topbar{padding:10px 16px;}
+}
+@media(max-width:600px){
+  .summary-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .s-card{padding:14px 12px;}
+  .s-info p{font-size:20px;}
+  .chart-card{padding:16px 12px;}
 }
 </style>
 <link rel="stylesheet" href="/static/student-theme.css">
 </head>
 <body>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="appSidebar">
   <div class="brand">
     <div class="brand-icon">📚</div>
     <div><h2>EduNote</h2><p>Author Workspace</p></div>
@@ -107,8 +128,11 @@ canvas{max-width:100%;}
 <!-- MAIN -->
 <div class="main-content">
   <div class="topbar">
-    <h2>📊 Analytics — {{ user.full_name }}</h2>
-    <a href="/author/{{ user.id }}">← Back to Dashboard</a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()" aria-label="Toggle Menu">☰</button>
+      <h2 style="font-size:18px;">📊 Analytics — {{ user.full_name }}</h2>
+    </div>
+    <a href="/author/{{ user.id }}" style="font-size:13px;color:#64748b;text-decoration:none;">← Dashboard</a>
   </div>
 
   <div class="page">
@@ -155,7 +179,7 @@ canvas{max-width:100%;}
 </div>
 
 <script>
-const AUTHOR_ID = {{ user.id }};
+const AUTHOR_ID = Number("{{ user.id }}") || 0;
 const PALETTE = ["#2563eb","#10b981","#f59e0b","#8b5cf6","#ef4444","#0ea5e9","#ec4899","#14b8a6"];
 
 async function loadAnalytics() {
@@ -233,6 +257,26 @@ async function loadAnalytics() {
   new Chart(document.getElementById("commentsChart"), barDefaults("Comments", data.book_comments, "#f59e0b"));
   new Chart(document.getElementById("salesChart"),    barDefaults("Sales",    data.book_sales,    "#8b5cf6"));
 }
+
+function toggleMobileSidebar(forced){
+  const sidebar = document.getElementById("appSidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if(!sidebar) return;
+  const shouldOpen = (typeof forced === "boolean") ? forced : !sidebar.classList.contains("open");
+  sidebar.classList.toggle("open", shouldOpen);
+  if(backdrop){
+    backdrop.classList.toggle("active", shouldOpen);
+  }
+}
+
+// Auto close on navigation
+document.querySelectorAll(".sidebar .menu a, .sidebar-footer a").forEach(link => {
+  link.addEventListener("click", () => {
+    if(window.innerWidth <= 900){
+      toggleMobileSidebar(false);
+    }
+  });
+});
 
 loadAnalytics();
 </script>

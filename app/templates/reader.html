@@ -392,13 +392,24 @@ body{background:var(--bg);color:var(--text);font-family:"Merriweather",serif;min
 
 </div><!-- /layout -->
 
+<script id="bookRawContent" type="application/json">
+{{ (book.content or '') | tojson }}
+</script>
+
 <script>
 /* =============================================
    BOOK DATA
 ============================================= */
-const BOOK_ID   = {{ book.id }};
-const USER_ID   = {{ user_id }};
-const RAW_HTML  = {{ book.content | tojson }};
+const BOOK_ID   = Number("{{ book.id }}") || 0;
+const USER_ID   = Number("{{ user_id }}") || 0;
+const RAW_HTML  = (function() {
+    try {
+        const el = document.getElementById("bookRawContent");
+        return el ? JSON.parse(el.textContent || '""') : "";
+    } catch(e) {
+        return "";
+    }
+})();
 
 /* =============================================
    SPLIT CONTENT INTO PAGES

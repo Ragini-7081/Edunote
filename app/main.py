@@ -1,3 +1,11 @@
+import hashlib
+import hmac
+import os
+import time
+from datetime import datetime
+
+from dotenv import load_dotenv
+
 from fastapi import (
     FastAPI,
     Request,
@@ -47,6 +55,16 @@ from .schemas import (
 
 
 # ==================================================
+# LOAD ENV FILES FROM PROJECT ROOT
+# ==================================================
+
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
+load_dotenv(ROOT_DIR / ".env")
+load_dotenv(BASE_DIR / ".env")
+
+
+# ==================================================
 # DATABASE
 # ==================================================
 
@@ -59,9 +77,81 @@ models.create_tables(engine)
 # APP
 # ==================================================
 
+load_dotenv()
+
 app = FastAPI(
     title="EduNote"
 )
+
+try:
+    import razorpay
+except ImportError:  # pragma: no cover
+    razorpay = None
+
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+
+def razorpay_enabled():
+    return bool(
+        razorpay is not None and
+        RAZORPAY_KEY_ID and
+        RAZORPAY_KEY_SECRET
+    )
+
+
+def verify_razorpay_signature(order_id: str, payment_id: str, signature: str) -> bool:
+    if not razorpay_enabled() or not signature:
+        return False
+
+    payload = f"{order_id}|{payment_id}".encode("utf-8")
+    generated = hmac.new(
+        RAZORPAY_KEY_SECRET.encode("utf-8"),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(generated, signature)
+
+
+PAYU_MERCHANT_KEY = os.getenv("PAYU_MERCHANT_KEY", "gtKFFx")
+PAYU_MERCHANT_SALT = os.getenv("PAYU_MERCHANT_SALT", "4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW")
+PAYU_MODE = os.getenv("PAYU_MODE", "test").lower()
+PAYU_ACTION_URL = "https://test.payu.in/_payment" if PAYU_MODE == "test" else "https://secure.payu.in/_payment"
+
+
+def generate_payu_hash(txnid: str, amount: str, productinfo: str, firstname: str, email: str, udf1: str = "") -> str:
+    # Standard PayU Hash: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
+    hash_str = f"{PAYU_MERCHANT_KEY}|{txnid}|{amount}|{productinfo}|{firstname}|{email}|{udf1}||||||||||{PAYU_MERCHANT_SALT}"
+    return hashlib.sha512(hash_str.encode("utf-8")).hexdigest().lower()
+
+
+
+def verify_payu_hash(data: dict) -> bool:
+    received_hash = (data.get("hash") or "").lower()
+    if not received_hash:
+        return False
+
+    status = data.get("status", "")
+    txnid = data.get("txnid", "")
+    amount = data.get("amount", "")
+    productinfo = data.get("productinfo", "")
+    firstname = data.get("firstname", "")
+    email = data.get("email", "")
+    udf1 = data.get("udf1", "")
+    udf2 = data.get("udf2", "")
+    udf3 = data.get("udf3", "")
+    udf4 = data.get("udf4", "")
+    udf5 = data.get("udf5", "")
+    key = data.get("key", PAYU_MERCHANT_KEY)
+    additional_charges = data.get("additionalCharges")
+
+    if additional_charges:
+        hash_str = f"{additional_charges}|{PAYU_MERCHANT_SALT}|{status}||||||{udf5}|{udf4}|{udf3}|{udf2}|{udf1}|{email}|{firstname}|{productinfo}|{amount}|{txnid}|{key}"
+    else:
+        hash_str = f"{PAYU_MERCHANT_SALT}|{status}||||||{udf5}|{udf4}|{udf3}|{udf2}|{udf1}|{email}|{firstname}|{productinfo}|{amount}|{txnid}|{key}"
+
+    computed_hash = hashlib.sha512(hash_str.encode("utf-8")).hexdigest().lower()
+    return hmac.compare_digest(computed_hash, received_hash)
 
 
 # ==================================================
@@ -93,8 +183,6 @@ threading.Timer(
 # ==================================================
 # PATHS
 # ==================================================
-
-BASE_DIR = Path(__file__).resolve().parent
 
 UPLOADS_DIR = BASE_DIR / "static" / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -4218,6 +4306,38 @@ def delete_student_note(
 # PAYMENT & PURCHASE ENDPOINTS
 # ==================================================
 
+
+def finalize_successful_payment(db: Session, payment):
+    purchase = None
+    if str(payment.status).lower() in ["success", "completed", "active"]:
+        existing_purchase = None
+        if payment.book_id:
+            existing_purchase = crud.get_book_purchase(db, payment.user_id, payment.book_id)
+        elif payment.video_id:
+            existing_purchase = crud.get_video_purchase(db, payment.user_id, payment.video_id)
+
+        if not existing_purchase:
+            purchase = crud.create_purchase(
+                db,
+                user_id=payment.user_id,
+                amount=payment.amount,
+                payment_id=payment.id,
+                book_id=payment.book_id,
+                video_id=payment.video_id
+            )
+    return purchase
+
+
+@app.get("/payment/razorpay/config")
+def get_razorpay_config():
+    return {
+        "enabled": razorpay_enabled(),
+        "key_id": RAZORPAY_KEY_ID,
+        "currency": "INR",
+        "message": "Razorpay is configured." if razorpay_enabled() else "Razorpay API keys are not configured yet."
+    }
+
+
 @app.post("/payment/create")
 def create_payment_endpoint(
     request: Request,
@@ -4269,6 +4389,239 @@ def create_payment_endpoint(
     }
 
 
+@app.post("/payment/razorpay/order")
+def create_razorpay_order(
+    request: Request,
+    data: dict = Body(None),
+    db: Session = Depends(get_db)
+):
+    if not razorpay_enabled():
+        raise HTTPException(status_code=503, detail="Razorpay is not configured on this server.")
+
+    body_data = data or {}
+    amount = body_data.get("amount")
+    payment_for = body_data.get("payment_for") or "Purchase"
+    item_id = body_data.get("item_id")
+    item_type = body_data.get("item_type") or "book"
+    user_id = body_data.get("user_id") or request.session.get("user_id")
+
+    if amount is None or float(amount) <= 0:
+        raise HTTPException(status_code=400, detail="A valid amount is required.")
+
+    payment = crud.create_payment(
+        db=db,
+        user_id=int(user_id) if user_id else 1,
+        amount=float(amount),
+        payment_for=str(payment_for),
+        item_id=int(item_id) if item_id else None,
+        item_type=str(item_type)
+    )
+
+    client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    order = client.order.create({
+        "amount": int(float(amount) * 100),
+        "currency": "INR",
+        "receipt": f"edunote_{payment.id}",
+        "notes": {
+            "payment_id": str(payment.id),
+            "payment_for": str(payment_for),
+            "item_id": str(item_id) if item_id else "",
+            "item_type": str(item_type),
+            "user_id": str(user_id) if user_id else ""
+        }
+    })
+
+    return {
+        "success": True,
+        "payment_id": payment.id,
+        "order_id": order["id"],
+        "amount": int(float(amount) * 100),
+        "currency": "INR",
+        "key_id": RAZORPAY_KEY_ID,
+        "message": "Razorpay order created successfully"
+    }
+
+
+@app.post("/payment/razorpay/verify")
+def verify_razorpay_payment(
+    request: Request,
+    data: dict = Body(None),
+    db: Session = Depends(get_db)
+):
+    if not razorpay_enabled():
+        raise HTTPException(status_code=503, detail="Razorpay is not configured on this server.")
+
+    body_data = data or {}
+    payment_id = body_data.get("payment_id")
+    order_id = body_data.get("order_id")
+    payment_signature = body_data.get("signature")
+    razorpay_payment_id = body_data.get("razorpay_payment_id")
+
+    if not all([payment_id, order_id, payment_signature, razorpay_payment_id]):
+        raise HTTPException(status_code=400, detail="Missing Razorpay verification data.")
+
+    if not verify_razorpay_signature(order_id, razorpay_payment_id, payment_signature):
+        raise HTTPException(status_code=400, detail="Razorpay signature verification failed.")
+
+    payment = crud.get_payment_by_id(db, int(payment_id))
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment record not found")
+
+    payment = crud.update_payment_status(
+        db,
+        payment_id=payment.id,
+        status="Success",
+        payment_method="Razorpay",
+        transaction_id=f"RZP_{razorpay_payment_id}"
+    )
+
+    purchase = finalize_successful_payment(db, payment)
+
+    return {
+        "success": True,
+        "payment_id": payment.id,
+        "status": payment.status,
+        "payment_method": payment.payment_method,
+        "transaction_id": payment.transaction_id,
+        "purchase_id": purchase.id if purchase else None,
+        "message": "Razorpay payment verified and access unlocked successfully"
+    }
+
+
+# ==================================================
+# PAYU PAYMENT GATEWAY ENDPOINTS (TEST SANDBOX)
+# ==================================================
+
+@app.get("/payment/payu/config")
+def get_payu_config():
+    return {
+        "enabled": True,
+        "mode": PAYU_MODE,
+        "key": PAYU_MERCHANT_KEY,
+        "action_url": PAYU_ACTION_URL,
+        "message": f"PayU is configured in {PAYU_MODE} mode."
+    }
+
+
+@app.post("/payment/payu/order")
+def create_payu_order(
+    request: Request,
+    data: dict = Body(None),
+    db: Session = Depends(get_db)
+):
+    body_data = data or {}
+    amount = body_data.get("amount")
+    payment_for = body_data.get("payment_for") or "Purchase"
+    item_id = body_data.get("item_id")
+    item_type = body_data.get("item_type") or "book"
+    user_id = body_data.get("user_id") or request.session.get("user_id") or 1
+
+    if amount is None or float(amount) <= 0:
+        raise HTTPException(status_code=400, detail="A valid amount is required.")
+
+    payment = crud.create_payment(
+        db=db,
+        user_id=int(user_id) if user_id else 1,
+        amount=float(amount),
+        payment_for=str(payment_for),
+        item_id=int(item_id) if item_id else None,
+        item_type=str(item_type)
+    )
+
+    amount_str = f"{float(amount):.2f}"
+    txnid = f"EDUTXN{payment.id}{int(time.time())}"
+    firstname = "EduNoteUser"
+    email = "test@edunote.app"
+    phone = "9876543210"
+    productinfo = "EduNotePurchase"
+
+    base_url = str(request.base_url).rstrip("/")
+    surl = f"{base_url}/payment/payu/response"
+    furl = f"{base_url}/payment/payu/response"
+    udf1 = str(payment.id)
+
+    hash_val = generate_payu_hash(
+        txnid=txnid,
+        amount=amount_str,
+        productinfo=productinfo,
+        firstname=firstname,
+        email=email,
+        udf1=udf1
+    )
+
+    return {
+        "success": True,
+        "payment_id": payment.id,
+        "action_url": PAYU_ACTION_URL,
+        "params": {
+            "key": PAYU_MERCHANT_KEY,
+            "txnid": txnid,
+            "amount": amount_str,
+            "productinfo": productinfo,
+            "firstname": firstname,
+            "email": email,
+            "phone": phone,
+            "surl": surl,
+            "furl": furl,
+            "udf1": udf1,
+            "hash": hash_val
+        },
+        "message": "PayU order parameters generated successfully"
+    }
+
+
+
+@app.post("/payment/payu/response")
+async def payu_response_callback(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    form_data = await request.form()
+    data = dict(form_data)
+
+    status = (data.get("status") or "").lower()
+    txnid = data.get("txnid", "")
+    payment_id = data.get("udf1")
+    unmappedstatus = data.get("unmappedstatus", "")
+
+    # Check hash validation (in test mode, accept success or valid hash)
+    is_valid_hash = verify_payu_hash(data) if PAYU_MODE != "test" else True
+
+    payment = None
+    if payment_id and str(payment_id).isdigit():
+        payment = crud.get_payment_by_id(db, int(payment_id))
+
+    user_id = payment.user_id if payment else request.session.get("user_id", 1)
+
+    if status == "success" and is_valid_hash:
+        if payment:
+            payment = crud.update_payment_status(
+                db,
+                payment_id=payment.id,
+                status="Success",
+                payment_method="PayU",
+                transaction_id=txnid or data.get("mihpayid", f"PAYU_{int(time.time())}")
+            )
+            finalize_successful_payment(db, payment)
+
+            if payment.book_id:
+                return RedirectResponse(url=f"/read/{payment.book_id}?user_id={user_id}&payment=success", status_code=303)
+            elif payment.video_id:
+                return RedirectResponse(url=f"/videowatch/{payment.video_id}?user_id={user_id}&payment=success", status_code=303)
+
+        return RedirectResponse(url=f"/student/{user_id}?payment=success", status_code=303)
+    else:
+        if payment:
+            crud.update_payment_status(
+                db,
+                payment_id=payment.id,
+                status="Cancelled" if status in ["cancel", "cancelled"] or unmappedstatus == "userCancelled" else "Failed",
+                payment_method="PayU",
+                transaction_id=txnid
+            )
+        return RedirectResponse(url=f"/student/{user_id}?payment=cancelled", status_code=303)
+
+
 @app.post("/payment/{payment_id}/status")
 def update_payment_status_endpoint(
     payment_id: int,
@@ -4295,24 +4648,7 @@ def update_payment_status_endpoint(
     if not payment:
         raise HTTPException(status_code=404, detail="Payment record not found")
 
-    purchase = None
-    if str(final_status).lower() in ["success", "completed", "active"]:
-        # Record purchase and unlock content
-        existing_purchase = None
-        if payment.book_id:
-            existing_purchase = crud.get_book_purchase(db, payment.user_id, payment.book_id)
-        elif payment.video_id:
-            existing_purchase = crud.get_video_purchase(db, payment.user_id, payment.video_id)
-
-        if not existing_purchase:
-            purchase = crud.create_purchase(
-                db,
-                user_id=payment.user_id,
-                amount=payment.amount,
-                payment_id=payment.id,
-                book_id=payment.book_id,
-                video_id=payment.video_id
-            )
+    purchase = finalize_successful_payment(db, payment)
 
     return {
         "success": True,

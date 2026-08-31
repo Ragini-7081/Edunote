@@ -79,7 +79,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-
 </div>
 
 <script>
-const SID = {{ user.id }};
+const SID = Number("{{ user.id }}") || 0;
 async function loadStats() {
   const r = await fetch(`/student/${SID}/stats`);
   const d = await r.json();

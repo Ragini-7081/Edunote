@@ -720,13 +720,9 @@
    IMPORTANT IDs
 ============================================================ */
 
-const videoId = Number(
-    {{ video.id if video else 0 }}
-);
+const videoId = Number("{{ video.id if video else 0 }}") || 0;
 
-const studentId = Number(
-    {{ user_id if user_id is defined else (student_id if student_id is defined else 0) }}
-);
+const studentId = Number("{{ user_id if user_id is defined else (student_id if student_id is defined else 0) }}") || 0;
 
 
 /* ============================================================
