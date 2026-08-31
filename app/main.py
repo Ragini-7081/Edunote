@@ -1,7 +1,10 @@
 import hashlib
 import hmac
+import json
 import os
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -90,6 +93,8 @@ except ImportError:  # pragma: no cover
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
 
 
 def razorpay_enabled():
@@ -1004,6 +1009,74 @@ def _matches_any(text: str, keywords: list) -> bool:
                 return True
     return False
 
+def _call_openrouter_for_book(message: str, context: dict | None = None) -> str:
+    api_key = OPENROUTER_API_KEY or os.getenv("OPENROUTER_API")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API is not set")
+
+    book_title = (context or {}).get("title") or "Untitled Book"
+    book_category = (context or {}).get("category") or "General"
+
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are EduNote AI, a professional educational book-writing assistant. "
+                    "Write polished, useful, author-friendly responses with clear structure, practical examples, "
+                    "and engaging tone."
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Book title: {book_title}\n"
+                    f"Category: {book_category}\n\n"
+                    f"User request: {message}\n\n"
+                    "Write a strong response suitable for a book author. Be clear, practical, and engaging."
+                )
+            }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 700
+    }
+
+    request = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://127.0.0.1:8000",
+            "X-Title": "EduNote"
+        },
+        method="POST"
+    )
+
+    with urllib.request.urlopen(request, timeout=60) as response:
+        result = json.loads(response.read().decode("utf-8"))
+
+    choices = result.get("choices") or []
+    if not choices:
+        raise ValueError("OpenRouter returned no choices")
+
+    content = choices[0].get("message", {}).get("content")
+    if isinstance(content, list):
+        text = "".join(
+            part.get("text", "")
+            for part in content
+            if isinstance(part, dict)
+        )
+    else:
+        text = content or ""
+
+    cleaned = str(text).strip()
+    if not cleaned:
+        raise ValueError("OpenRouter returned empty content")
+    return cleaned
+
+
 @app.post("/ai-chat")
 def ai_chat(
     data: dict = Body(...)
@@ -1017,6 +1090,16 @@ def ai_chat(
         or data.get("content")
         or ""
     ).strip()
+
+    context = data.get("context") or {}
+
+    if OPENROUTER_API_KEY:
+        try:
+            generated_reply = _call_openrouter_for_book(raw_message, context)
+            if generated_reply:
+                return {"reply": generated_reply}
+        except Exception as exc:  # pragma: no cover - graceful fallback if API fails
+            print(f"[AI] OpenRouter request failed: {exc}")
 
     if not raw_message:
         return {
