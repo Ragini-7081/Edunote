@@ -4865,7 +4865,7 @@ def payment_page(
             book = books[0]
             book_id = book.id
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request,
         name="payment.html",
         context={
@@ -4878,6 +4878,11 @@ def payment_page(
             "item_type": "video" if video and not book else "book"
         }
     )
+    # Disable browser caching of payment page to prevent back button issues
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @app.get("/student/{user_id}/purchases")

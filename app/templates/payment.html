@@ -978,15 +978,17 @@
                             confirmResult.redirect
                         ) {
 
-                            window.location.href =
-                                confirmResult.redirect;
+                            window.location.replace(
+                                confirmResult.redirect
+                            );
 
                         }
 
                         else {
 
-                            window.location.href =
-                                `/student/${userId}`;
+                            window.location.replace(
+                                `/student/${userId}`
+                            );
 
                         }
 
