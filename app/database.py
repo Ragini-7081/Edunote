@@ -11,7 +11,7 @@ load_dotenv()
 # DATABASE URL
 # ==================================================
 
-# Use DATABASE_URL from environment (Render provides this)
+# Use DATABASE_URL from environment (Neon provides this)
 # Fallback to SQLite for local development if not set
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -19,8 +19,9 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
 )
 
 # Convert PostgreSQL URLs to use psycopg3 driver
+# Neon provides postgres:// or postgresql:// URLs
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    # Render sometimes uses old postgres:// scheme
+    # Neon sometimes uses postgres:// scheme
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
 elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
     # Standard postgresql:// becomes postgresql+psycopg:// for psycopg3
