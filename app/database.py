@@ -18,9 +18,13 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "sqlite:///./app.db"
 )
 
-# For PostgreSQL on Render, adjust the URL scheme if needed
+# Convert PostgreSQL URLs to use psycopg3 driver
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    # Render sometimes uses old postgres:// scheme
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
+    # Standard postgresql:// becomes postgresql+psycopg:// for psycopg3
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
 
 # ==================================================
