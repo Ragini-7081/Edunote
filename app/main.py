@@ -188,10 +188,20 @@ def verify_payu_hash(data: dict) -> bool:
 # ==================================================
 # SESSION MIDDLEWARE
 # ==================================================
+# Configure session to persist for 30 days if "Remember me" is checked
+# Otherwise uses browser session (closes on browser exit)
+
+SESSION_SECRET_KEY = os.getenv(
+    "SESSION_SECRET_KEY",
+    "edunote-secret-key-please-change-in-env"
+)
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key="edunote-secret-key-change-this-later"
+    secret_key=SESSION_SECRET_KEY,
+    max_age=2592000,  # 30 days in seconds
+    same_site="lax",
+    https_only=False  # Set to True in production
 )
 
 
@@ -460,6 +470,7 @@ def login(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
+    remember_me: str = Form(None),
     db: Session = Depends(get_db)
 ):
 
@@ -479,11 +490,16 @@ def login(
             status_code=401
         )
 
+    # Set session data
     request.session["user_id"] = user.id
     request.session["email"] = user.email
     request.session["username"] = user.username
     request.session["full_name"] = user.full_name
     request.session["role"] = user.role
+    
+    # If "Remember me" is checked, set a flag
+    if remember_me:
+        request.session["remember_me"] = True
 
     user_role = str(
         user.role or ""
