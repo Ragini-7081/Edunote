@@ -773,11 +773,20 @@ def student_dashboard(
             status_code=303
         )
 
+    # Get purchase count
+    purchases = crud.get_user_purchases(db, user_id)
+    purchase_count = len(purchases) if purchases else 0
+
     return templates.TemplateResponse(
         request=request,
         name="student.html",
         context={
-            "user": user
+            "user": user,
+            "user_id": user_id,
+            "purchase_count": purchase_count,
+            "books_url": f"/student/{user_id}/books",
+            "videos_url": f"/student/{user_id}/videos",
+            "purchases_url": f"/student/{user_id}/purchases"
         }
     )
 
@@ -4809,6 +4818,72 @@ def update_payment_status_endpoint(
     }
 
 
+@app.post("/student/{user_id}/access-free-book/{book_id}")
+def access_free_book(
+    user_id: int,
+    book_id: int,
+    db: Session = Depends(get_db)
+):
+    """Grant access to a free book"""
+    book = crud.get_book(db, book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    # Check if book is free
+    if (book.price or 0.0) != 0:
+        raise HTTPException(status_code=400, detail="This book is not free")
+
+    # Create purchase record if not exists
+    existing = crud.get_book_purchase(db, user_id, book_id)
+    if not existing:
+        crud.create_purchase(
+            db,
+            user_id=user_id,
+            amount=0.0,
+            payment_id=None,
+            book_id=book_id
+        )
+
+    return {
+        "success": True,
+        "message": "Access granted to free book",
+        "redirect": f"/read/{book_id}?user_id={user_id}"
+    }
+
+
+@app.post("/student/{user_id}/access-free-video/{video_id}")
+def access_free_video(
+    user_id: int,
+    video_id: int,
+    db: Session = Depends(get_db)
+):
+    """Grant access to a free video"""
+    video = crud.get_video(db, video_id)
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+
+    # Check if video is free
+    if (video.price or 0.0) != 0:
+        raise HTTPException(status_code=400, detail="This video is not free")
+
+    # Create purchase record if not exists
+    existing = crud.get_video_purchase(db, user_id, video_id)
+    if not existing:
+        crud.create_purchase(
+            db,
+            user_id=user_id,
+            amount=0.0,
+            payment_id=None,
+            video_id=video_id
+        )
+
+    return {
+        "success": True,
+        "message": "Access granted to free video",
+        "redirect": f"/video/{video_id}?user_id={user_id}"
+    }
+
+
 @app.post("/student/{user_id}/buy-book/{book_id}/confirm")
 def confirm_book_purchase(
     user_id: int,
@@ -4822,6 +4897,24 @@ def confirm_book_purchase(
         raise HTTPException(status_code=404, detail="Book not found")
 
     amount = book.price or 0.0
+    
+    # If free, grant access directly
+    if amount == 0:
+        existing = crud.get_book_purchase(db, user_id, book_id)
+        if not existing:
+            crud.create_purchase(
+                db,
+                user_id=user_id,
+                amount=0.0,
+                payment_id=None,
+                book_id=book_id
+            )
+        return {
+            "success": True,
+            "message": "Book accessed successfully",
+            "redirect": f"/read/{book_id}?user_id={user_id}"
+        }
+    
     txn_id = f"BK_{book_id}_{user_id}_{int(datetime.utcnow().timestamp())}"
 
     # Create successful payment
@@ -4872,6 +4965,24 @@ def confirm_video_purchase(
         raise HTTPException(status_code=404, detail="Video not found")
 
     amount = video.price or 0.0
+    
+    # If free, grant access directly
+    if amount == 0:
+        existing = crud.get_video_purchase(db, user_id, video_id)
+        if not existing:
+            crud.create_purchase(
+                db,
+                user_id=user_id,
+                amount=0.0,
+                payment_id=None,
+                video_id=video_id
+            )
+        return {
+            "success": True,
+            "message": "Video accessed successfully",
+            "redirect": f"/video/{video_id}?user_id={user_id}"
+        }
+    
     txn_id = f"VD_{video_id}_{user_id}_{int(datetime.utcnow().timestamp())}"
 
     # Create successful payment
@@ -4972,6 +5083,91 @@ def get_student_purchases(
     return result
 
 
+# ==================================================
+# GET STUDENT'S PURCHASED & FREE BOOKS
+# ==================================================
+
+@app.get("/student/{user_id}/books")
+def get_student_books(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get all books accessible to the student (purchased + free)"""
+    
+    # Get all published books
+    all_books = crud.get_published_books(db)
+    
+    result = []
+    for book in all_books:
+        price = book.price or 0.0
+        is_free = price == 0
+        has_purchased = crud.has_book_access(db, user_id, book.id) if user_id else False
+        
+        # Include if free or if user has purchased
+        if is_free or has_purchased:
+            result.append({
+                "id": book.id,
+                "title": book.title,
+                "author_id": book.author_id,
+                "author_name": book.author.full_name if book.author else "Unknown",
+                "description": book.description,
+                "category": book.category,
+                "price": price,
+                "is_free": is_free,
+                "has_access": True,
+                "created_at": book.created_at.isoformat() if book.created_at else "",
+                "rating": book.rating if hasattr(book, 'rating') else 0,
+                "likes": book.likes if hasattr(book, 'likes') else 0
+            })
+    
+    return result
+
+
+# ==================================================
+# GET STUDENT'S PURCHASED & FREE VIDEOS
+# ==================================================
+
+@app.get("/student/{user_id}/videos")
+def get_student_videos(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get all videos accessible to the student (purchased + free)"""
+    
+    # Get all published videos
+    all_videos = db.query(models.Video).filter(
+        models.Video.status == "Published"
+    ).all()
+    
+    result = []
+    for video in all_videos:
+        price = video.price or 0.0
+        is_free = price == 0
+        has_purchased = crud.has_video_access(db, user_id, video.id) if user_id else False
+        
+        # Include if free or if user has purchased
+        if is_free or has_purchased:
+            result.append({
+                "id": video.id,
+                "title": video.title,
+                "seller_id": video.seller_id,
+                "seller_name": video.seller.full_name if video.seller else "Unknown",
+                "description": video.description,
+                "category": video.category,
+                "price": price,
+                "is_free": is_free,
+                "has_access": True,
+                "duration": video.duration,
+                "views": video.views or 0,
+                "likes": video.likes or 0,
+                "created_at": video.created_at.isoformat() if hasattr(video, 'created_at') and video.created_at else "",
+                "thumbnail": video.thumbnail if video.thumbnail else "",
+                "filename": video.filename if video.filename else ""
+            })
+    
+    return result
+
+
 @app.get("/api/check-access/{item_type}/{item_id}")
 def check_item_access(
     item_type: str,
@@ -5005,5 +5201,6 @@ def check_item_access(
         "item_id": item_id,
         "is_free": is_free,
         "price": price,
-        "has_access": has_access
+        "has_access": has_access,
+        "user_id": final_user_id
     }
