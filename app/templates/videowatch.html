@@ -425,18 +425,29 @@
                 controls
                 preload="metadata"
                 playsinline
-                {% if video.thumbnail %}
-                poster="{{ video.thumbnail }}"
+                {% if thumbnail_url %}
+                poster="{{ thumbnail_url }}"
+                {% elif video_data and video_data.thumbnail %}
+                poster="{{ video_data.thumbnail }}"
+                {% elif video.thumbnail %}
+                poster="{{ video.thumbnail if (video.thumbnail.startswith('http') or video.thumbnail.startswith('/')) else '/static/' + video.thumbnail }}"
                 {% endif %}
             >
 
-                {% if video.filename %}
+                {% set final_video_src = video_url or (video_data and video_data.filename) or (video_data and video_data.video) or '' %}
+                {% if not final_video_src and video.filename %}
+                    {% if video.filename.startswith('http://') or video.filename.startswith('https://') or video.filename.startswith('/') %}
+                        {% set final_video_src = video.filename %}
+                    {% else %}
+                        {% set final_video_src = '/static/' + video.filename %}
+                    {% endif %}
+                {% endif %}
 
+                {% if final_video_src %}
                 <source
-                    src="{{ video.filename }}"
+                    src="{{ final_video_src }}"
                     type="video/mp4"
                 >
-
                 {% endif %}
 
                 Your browser does not support HTML5 video.
@@ -736,9 +747,29 @@ if (mainVideo) {
     );
 
 
+    let fallbackAttempted = false;
     mainVideo.addEventListener(
         "error",
         function () {
+            if (!fallbackAttempted && videoId) {
+                fallbackAttempted = true;
+                fetch(`/video/${videoId}/file`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.video_url && mainVideo.src !== data.video_url) {
+                            mainVideo.src = data.video_url;
+                            mainVideo.load();
+                            return;
+                        }
+                        const errorBox = document.getElementById("videoError");
+                        if (errorBox) errorBox.style.display = "block";
+                    })
+                    .catch(() => {
+                        const errorBox = document.getElementById("videoError");
+                        if (errorBox) errorBox.style.display = "block";
+                    });
+                return;
+            }
 
             const errorBox =
                 document.getElementById("videoError");

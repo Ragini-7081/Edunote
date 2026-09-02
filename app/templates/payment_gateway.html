@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNote - Payment Gateway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --accent: #0f766e;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --bg-page: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            color: var(--text-main);
+        }
+
+        .gateway-card {
+            background: var(--surface);
+            width: min(520px, 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.05);
+            overflow: hidden;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            animation: slideUp 0.35s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .gateway-header {
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            color: #ffffff;
+            padding: 26px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .gateway-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            font-size: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .brand-text p {
+            font-size: 0.82rem;
+            opacity: 0.85;
+        }
+
+        .security-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gateway-body {
+            padding: 32px 30px;
+        }
+
+        .item-summary {
+            background: var(--primary-light);
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .item-type-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .item-details {
+            min-width: 0;
+        }
+
+        .item-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-method {
+            font-size: 0.8rem;
+            color: #3b82f6;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .item-price {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1d4ed8;
+            flex-shrink: 0;
+        }
+
+        .status-container {
+            text-align: center;
+            padding: 24px 16px;
+            background: #fafafa;
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            margin-bottom: 24px;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .status-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        .status-desc {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 13px 18px;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .gateway-footer {
+            border-top: 1px solid var(--border);
+            padding: 16px 30px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .tab-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .tab-indicator::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="gateway-card">
+        <header class="gateway-header">
+            <div class="gateway-brand">
+                <div class="brand-icon">📚</div>
+                <div class="brand-text">
+                    <h1>EduNote</h1>
+                    <p>Secure Checkout</p>
+                </div>
+            </div>
+            <div class="security-badge">
+                🔒 256-bit Encrypted
+            </div>
+        </header>
+
+        <div class="gateway-body">
+            <div class="item-summary">
+                <div class="item-info">
+                    <div class="item-type-icon">
+                        {% if item_type == 'video' %}🎬{% else %}📚{% endif %}
+                    </div>
+                    <div class="item-details">
+                        <div class="item-title">{{ item_name }}</div>
+                        <div class="item-method">Via {{ method }} Gateway</div>
+                    </div>
+                </div>
+                <div class="item-price">₹{{ "%.2f"|format(amount) }}</div>
+            </div>
+
+            <div class="status-container">
+                <div class="spinner" id="spinner"></div>
+                <div class="status-icon" id="statusIcon"></div>
+                <div class="status-title" id="statusTitle">Connecting to Payment Gateway...</div>
+                <div class="status-desc" id="statusDesc">Please wait while we initialize the secure payment window. Do not close this tab.</div>
+            </div>
+
+            <div class="action-buttons" id="actionButtons" style="display: none;">
+                <button type="button" class="btn btn-primary" id="retryBtn" onclick="startPayment()">
+                    🔄 Retry Payment
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="window.close()">
+                    Close Tab
+                </button>
+            </div>
+        </div>
+
+        <footer class="gateway-footer">
+            <span class="tab-indicator">Payment Tab Active</span>
+            <span>EduNote Payments</span>
+        </footer>
+    </div>
+
+    <script>
+        const ITEM_TYPE = "{{ item_type }}";
+        const ITEM_ID = Number("{{ item_id }}");
+        const ITEM_NAME = "{{ item_name }}";
+        const AMOUNT = Number("{{ amount }}");
+        const METHOD = "{{ method }}";
+        const USER_ID = Number("{{ user_id }}") || 0;
+        const RAZORPAY_KEY_ID = "{{ razorpay_key_id }}";
+
+        const spinner = document.getElementById("spinner");
+        const statusIcon = document.getElementById("statusIcon");
+        const statusTitle = document.getElementById("statusTitle");
+        const statusDesc = document.getElementById("statusDesc");
+        const actionButtons = document.getElementById("actionButtons");
+
+        function setStatus(title, desc, icon, isError = false, isSuccess = false) {
+            statusTitle.textContent = title;
+            statusDesc.textContent = desc;
+            if (icon) {
+                spinner.style.display = "none";
+                statusIcon.textContent = icon;
+                statusIcon.style.display = "block";
+            } else {
+                spinner.style.display = "block";
+                statusIcon.style.display = "none";
+            }
+            if (isError) {
+                statusTitle.style.color = "var(--danger)";
+                actionButtons.style.display = "flex";
+            } else if (isSuccess) {
+                statusTitle.style.color = "var(--success)";
+                actionButtons.style.display = "none";
+            } else {
+                statusTitle.style.color = "var(--text-main)";
+                actionButtons.style.display = "none";
+            }
+        }
+
+        // Notify opener tab and localStorage
+        function notifyPaymentSuccess(paymentId) {
+            const payload = {
+                type: "PAYMENT_SUCCESS",
+                item_type: ITEM_TYPE,
+                item_id: ITEM_ID,
+                payment_id: paymentId,
+                timestamp: Date.now()
+            };
+
+            // 1. PostMessage to opener window
+            if (window.opener) {
+                try {
+                    window.opener.postMessage(payload, "*");
+                } catch (e) {
+                    console.warn("Could not postMessage to opener:", e);
+                }
+            }
+
+            // 2. BroadcastChannel
+            if (typeof BroadcastChannel !== "undefined") {
+                try {
+                    const bc = new BroadcastChannel("edunote_payment");
+                    bc.postMessage(payload);
+                } catch (e) {}
+            }
+
+            // 3. LocalStorage event (detected across all tabs)
+            try {
+                localStorage.setItem("edunote_payment_event", JSON.stringify(payload));
+                localStorage.setItem("payment_status", JSON.stringify({
+                    success: true,
+                    item_type: ITEM_TYPE,
+                    item_id: ITEM_ID,
+                    payment_id: paymentId,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {}
+        }
+
+        function notifyPaymentCancel(errorMessage) {
+            const payload = {
+                type: "PAYMENT_CANCELLED",
+                item_type: ITEM_TYPE,
+                item_id: ITEM_ID,
+                error: errorMessage || "Payment cancelled",
+                timestamp: Date.now()
+            };
+
+            if (window.opener) {
+                try {
+                    window.opener.postMessage(payload, "*");
+                } catch (e) {}
+            }
+
+            try {
+                localStorage.setItem("edunote_payment_event", JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        // PayU Gateway Integration
+        async function launchPayUGateway() {
+            setStatus("Preparing PayU Checkout...", "Generating secure PayU transaction...", null);
+
+            try {
+                const response = await fetch("/payment/payu/order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        amount: AMOUNT,
+                        payment_for: `Purchase ${ITEM_TYPE}: ${ITEM_NAME}`,
+                        item_id: ITEM_ID,
+                        item_type: ITEM_TYPE,
+                        user_id: USER_ID
+                    })
+                });
+
+                const orderData = await response.json().catch(() => ({}));
+
+                if (!response.ok || !orderData.params) {
+                    throw new Error(orderData.detail || orderData.message || "Could not initialize PayU order.");
+                }
+
+                setStatus("Redirecting to PayU...", "Forwarding you to PayU Sandbox...", null);
+
+                // Create form and submit in this tab
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = orderData.action_url;
+                form.style.display = "none";
+
+                for (const key in orderData.params) {
+                    if (Object.prototype.hasOwnProperty.call(orderData.params, key)) {
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = key;
+                        input.value = orderData.params[key];
+                        form.appendChild(input);
+                    }
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            } catch (err) {
+                console.error("PayU error:", err);
+                setStatus("PayU Connection Failed", err.message || "Failed to connect to PayU sandbox.", "⚠️", true);
+                notifyPaymentCancel(err.message);
+            }
+        }
+
+        // Razorpay Gateway Integration
+        async function launchRazorpayGateway() {
+            if (typeof Razorpay === "undefined") {
+                setStatus("Razorpay SDK Error", "Razorpay checkout library could not be loaded.", "⚠️", true);
+                return;
+            }
+
+            setStatus("Preparing Razorpay Checkout...", "Creating your secure order...", null);
+
+            try {
+                const response = await fetch("/payment/razorpay/order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        amount: AMOUNT,
+                        payment_for: `Purchase ${ITEM_TYPE}: ${ITEM_NAME}`,
+                        item_id: ITEM_ID,
+                        item_type: ITEM_TYPE,
+                        user_id: USER_ID
+                    })
+                });
+
+                const orderData = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(orderData.detail || orderData.message || "Could not initialize Razorpay order.");
+                }
+
+                setStatus("Awaiting Razorpay Completion...", "Complete the payment in the Razorpay popup.", null);
+
+                const rzp = new Razorpay({
+                    key: orderData.key_id || RAZORPAY_KEY_ID,
+                    amount: Number(orderData.amount),
+                    currency: orderData.currency || "INR",
+                    name: "EduNote",
+                    description: `Purchase ${ITEM_TYPE}: ${ITEM_NAME}`,
+                    order_id: orderData.order_id,
+                    handler: async function(rzpResponse) {
+                        setStatus("Verifying Payment...", "Confirming your transaction with EduNote...", null);
+
+                        try {
+                            const verifyResp = await fetch("/payment/razorpay/verify", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json"
+                                },
+                                credentials: "include",
+                                body: JSON.stringify({
+                                    payment_id: Number(orderData.payment_id),
+                                    order_id: rzpResponse.razorpay_order_id,
+                                    signature: rzpResponse.razorpay_signature,
+                                    razorpay_payment_id: rzpResponse.razorpay_payment_id
+                                })
+                            });
+
+                            const verifyData = await verifyResp.json().catch(() => ({}));
+
+                            if (!verifyResp.ok) {
+                                throw new Error(verifyData.detail || verifyData.message || "Payment verification failed.");
+                            }
+
+                            const paidPaymentId = Number(verifyData.payment_id || orderData.payment_id);
+                            setStatus(
+                                "Payment Successful!",
+                                "Payment complete! Closing this tab and returning to EduNote...",
+                                "✅",
+                                false,
+                                true
+                            );
+
+                            notifyPaymentSuccess(paidPaymentId);
+
+                            if (window.opener) {
+                                try {
+                                    window.opener.focus();
+                                } catch (e) {}
+                            }
+
+                            // Close this tab and switch to opener tab
+                            setTimeout(() => {
+                                window.close();
+                                // Fallback redirect if browser prevents script from closing the window
+                                setTimeout(() => {
+                                    if (ITEM_TYPE === "video") {
+                                        window.location.replace(`/video/${ITEM_ID}?payment=success`);
+                                    } else {
+                                        window.location.replace(`/read/${ITEM_ID}?payment=success`);
+                                    }
+                                }, 600);
+                            }, 500);
+
+                        } catch (verifyErr) {
+                            console.error("Verification error:", verifyErr);
+                            setStatus("Verification Failed", verifyErr.message || "Payment verification failed.", "❌", true);
+                            notifyPaymentCancel(verifyErr.message);
+                        }
+                    },
+                    prefill: {
+                        name: "EduNote Student",
+                        email: "student@edunote.app"
+                    },
+                    theme: {
+                        color: "#2563eb"
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            setStatus("Payment Cancelled", "The payment window was closed before completion.", "ℹ️", true);
+                            notifyPaymentCancel("User cancelled payment");
+                        }
+                    }
+                });
+
+                rzp.on("payment.failed", function(failResp) {
+                    const desc = failResp?.error?.description || "Payment failed or was declined.";
+                    setStatus("Payment Failed", desc, "❌", true);
+                    notifyPaymentCancel(desc);
+                });
+
+                rzp.open();
+
+            } catch (err) {
+                console.error("Razorpay setup error:", err);
+                setStatus("Razorpay Order Failed", err.message || "Failed to create Razorpay order.", "⚠️", true);
+                notifyPaymentCancel(err.message);
+            }
+        }
+
+        function startPayment() {
+            if (METHOD.toLowerCase() === "payu") {
+                launchPayUGateway();
+            } else {
+                launchRazorpayGateway();
+            }
+        }
+
+        // Auto-launch gateway on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(startPayment, 300);
+        });
+    </script>
+</body>
+</html>

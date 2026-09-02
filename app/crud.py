@@ -521,15 +521,23 @@ def get_student_stats(db: Session, user_id: int):
         models.Comment.user_id == user_id
     ).all()
 
-    # Keep existing meaning:
-    # a book the student interacted with through comments.
-    books_interacted = len(
-        set(
+    # Books student interacted with (commented or purchased)
+    try:
+        book_ids = set(
             comment.book_id
             for comment in comments
             if comment.book_id is not None
         )
-    )
+        for bp in db.query(models.Purchase.book_id).filter(
+            models.Purchase.user_id == user_id,
+            models.Purchase.book_id.isnot(None),
+            models.Purchase.active == True
+        ).all():
+            if bp[0]:
+                book_ids.add(bp[0])
+        books_interacted = len(book_ids)
+    except Exception:
+        books_interacted = len(comments)
 
     total_comments = len(comments)
 
@@ -552,13 +560,20 @@ def get_student_stats(db: Session, user_id: int):
     except Exception:
         total_published_videos = 0
 
-    # Videos for which this student has saved video notes.
+    # Videos student interacted with (notes, comments, or purchased)
     try:
-        videos_watched = db.query(
-            models.VideoNote.video_id
-        ).filter(
-            models.VideoNote.student_id == user_id
-        ).distinct().count()
+        video_ids = set()
+        for vn in db.query(models.VideoNote.video_id).filter(models.VideoNote.student_id == user_id).all():
+            if vn[0]: video_ids.add(vn[0])
+        for vc in db.query(models.VideoComment.video_id).filter(models.VideoComment.user_id == user_id).all():
+            if vc[0]: video_ids.add(vc[0])
+        for vp in db.query(models.Purchase.video_id).filter(
+            models.Purchase.user_id == user_id,
+            models.Purchase.video_id.isnot(None),
+            models.Purchase.active == True
+        ).all():
+            if vp[0]: video_ids.add(vp[0])
+        videos_watched = len(video_ids)
     except Exception:
         videos_watched = 0
 
@@ -607,22 +622,22 @@ def get_student_stats(db: Session, user_id: int):
 
     try:
         purchased_books = db.query(
-            models.Payment
+            models.Purchase
         ).filter(
-            models.Payment.user_id == user_id,
-            models.Payment.book_id.isnot(None),
-            models.Payment.status == "Completed"
+            models.Purchase.user_id == user_id,
+            models.Purchase.book_id.isnot(None),
+            models.Purchase.active == True
         ).count()
     except Exception:
         purchased_books = 0
 
     try:
         purchased_videos = db.query(
-            models.Payment
+            models.Purchase
         ).filter(
-            models.Payment.user_id == user_id,
-            models.Payment.video_id.isnot(None),
-            models.Payment.status == "Completed"
+            models.Purchase.user_id == user_id,
+            models.Purchase.video_id.isnot(None),
+            models.Purchase.active == True
         ).count()
     except Exception:
         purchased_videos = 0

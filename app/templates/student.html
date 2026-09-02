@@ -606,11 +606,18 @@ body{
 
     border-radius:var(--radius);
 
-    padding:22px;
+    padding:20px 22px;
 
     box-shadow:var(--shadow);
 
     border:1px solid var(--border);
+}
+
+.chart-container{
+    position:relative;
+    height:150px;
+    max-height:160px;
+    width:100%;
 }
 
 .chart-card h3{
@@ -1035,6 +1042,59 @@ body{
     font-size:12px;
     font-weight:600;
     margin-bottom:9px;
+}
+
+.purchased-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:3px 8px;
+    background:#dcfce7;
+    color:#15803d;
+    border-radius:6px;
+    font-weight:700;
+    font-size:12px;
+    margin-bottom:9px;
+}
+
+.my-library-section{
+    background:var(--white);
+    border-radius:18px;
+    padding:24px;
+    margin-bottom:32px;
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+}
+
+.library-tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:12px;
+    margin-bottom:20px;
+}
+
+.lib-tab{
+    padding:8px 16px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--muted);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .2s;
+}
+
+.lib-tab:hover{
+    color:var(--primary);
+    border-color:var(--primary);
+}
+
+.lib-tab.active{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
 }
 
 
@@ -1674,6 +1734,22 @@ body{
 
         <li>
 
+            <a href="#myLibrarySection">
+
+                <span class="icon">
+                    📖
+                </span>
+
+                <span>
+                    My Library
+                </span>
+
+            </a>
+
+        </li>
+
+        <li>
+
             <a href="#browseSection">
 
                 <span class="icon">
@@ -1682,6 +1758,22 @@ body{
 
                 <span>
                     Browse Books
+                </span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="#studentVideoSection">
+
+                <span class="icon">
+                    🎬
+                </span>
+
+                <span>
+                    Browse Videos
                 </span>
 
             </a>
@@ -1818,12 +1910,21 @@ body{
 
             </div>
 
-            <a
-                href="#browseSection"
-                class="btn-white"
-            >
-                📚 Browse Books
-            </a>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a
+                    href="#myLibrarySection"
+                    class="btn-white"
+                    style="background:#2563eb; color:#fff; border:1px solid rgba(255,255,255,0.3);"
+                >
+                    📖 My Library
+                </a>
+                <a
+                    href="#browseSection"
+                    class="btn-white"
+                >
+                    📚 Browse Books
+                </a>
+            </div>
 
         </div>
 
@@ -1909,10 +2010,9 @@ body{
                     📊 Reading Progress Overview
                 </h3>
 
-                <canvas
-                    id="progressChart"
-                    height="130"
-                ></canvas>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
 
             </div>
 
@@ -1941,6 +2041,61 @@ body{
             </div>
 
         </div>
+
+        <!-- =========================================================
+             MY LIBRARY (PURCHASED BOOKS & VIDEOS)
+        ========================================================== -->
+        <section id="myLibrarySection" class="my-library-section">
+            <div class="section-head-row" style="margin-bottom: 8px;">
+                <div>
+                    <span style="font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                        YOUR PURCHASED & ENROLLED CONTENT
+                    </span>
+                    <h2>
+                        📖 My Library
+                    </h2>
+                </div>
+            </div>
+
+            <div class="library-tabs">
+                <button type="button" class="lib-tab active" id="tabLibBooks" onclick="switchLibraryTab('books')">
+                    📚 My Books (<span id="myBooksCount">0</span>)
+                </button>
+                <button type="button" class="lib-tab" id="tabLibVideos" onclick="switchLibraryTab('videos')">
+                    🎬 My Videos (<span id="myVideosCount">0</span>)
+                </button>
+                <button type="button" class="lib-tab" id="tabLibHistory" onclick="switchLibraryTab('history')">
+                    🧾 Purchase History
+                </button>
+            </div>
+
+            <!-- My Books Pane -->
+            <div id="libBooksPane" class="lib-pane">
+                <div class="books-grid" id="myBooksGrid">
+                    <div class="empty-books">
+                        <div class="ei">⏳</div>
+                        <p>Loading your library...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Videos Pane -->
+            <div id="libVideosPane" class="lib-pane" style="display: none;">
+                <div class="student-video-grid" id="myVideosGrid">
+                    <div class="video-loading">
+                        <div class="video-loading-icon">⏳</div>
+                        Loading your videos...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase History Pane -->
+            <div id="libHistoryPane" class="lib-pane" style="display: none;">
+                <div id="myHistoryContainer" style="background: #fff; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto;">
+                    <!-- Rendered by JS table -->
+                </div>
+            </div>
+        </section>
 
         <div id="browseSection">
 
@@ -2261,8 +2416,173 @@ let activeTab = "all";
 let searchQ = "";
 let chartBuilt = false;
 
+let studentPurchasedBookIds = new Set();
+let studentPurchasedVideoIds = new Set();
+let studentPurchasesList = [];
+
 let currentPurchase = null;
 let razorpayConfig = { enabled: false, key_id: "" };
+
+async function loadStudentPurchases() {
+    try {
+        const res = await fetch(`/student/${STUDENT_ID}/purchases`, { cache: "no-store" });
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                studentPurchasesList = data;
+                studentPurchasedBookIds.clear();
+                studentPurchasedVideoIds.clear();
+                data.forEach(p => {
+                    if (p.book_id) studentPurchasedBookIds.add(Number(p.book_id));
+                    if (p.video_id) studentPurchasedVideoIds.add(Number(p.video_id));
+                });
+            }
+        }
+    } catch (e) {
+        console.error("Failed to load purchases:", e);
+    }
+}
+
+function switchLibraryTab(tab) {
+    document.querySelectorAll(".lib-tab").forEach(t => t.classList.remove("active"));
+    const activeBtn = document.getElementById("tabLib" + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if (activeBtn) activeBtn.classList.add("active");
+
+    const booksPane = document.getElementById("libBooksPane");
+    const videosPane = document.getElementById("libVideosPane");
+    const historyPane = document.getElementById("libHistoryPane");
+
+    if (booksPane) booksPane.style.display = tab === "books" ? "block" : "none";
+    if (videosPane) videosPane.style.display = tab === "videos" ? "block" : "none";
+    if (historyPane) historyPane.style.display = tab === "history" ? "block" : "none";
+}
+
+function renderMyLibrary() {
+    const myBooksGrid = document.getElementById("myBooksGrid");
+    const myVideosGrid = document.getElementById("myVideosGrid");
+    const myHistoryContainer = document.getElementById("myHistoryContainer");
+    const myBooksCount = document.getElementById("myBooksCount");
+    const myVideosCount = document.getElementById("myVideosCount");
+
+    // Filter allBooks for purchased books
+    const myBooks = allBooks.filter(b => studentPurchasedBookIds.has(Number(b.id)));
+    // Filter allStudentVideos for purchased videos
+    const myVideos = allStudentVideos.filter(v => studentPurchasedVideoIds.has(Number(v.id)));
+
+    if (myBooksCount) myBooksCount.innerText = myBooks.length;
+    if (myVideosCount) myVideosCount.innerText = myVideos.length;
+
+    // Render My Books
+    if (myBooksGrid) {
+        if (!myBooks.length) {
+            myBooksGrid.innerHTML = `
+                <div class="empty-books" style="grid-column: 1/-1; padding: 40px 20px; text-align: center;">
+                    <div class="ei" style="font-size: 40px; margin-bottom: 8px;">📚</div>
+                    <p style="color: #64748b; font-weight: 600;">You have not purchased any books yet.</p>
+                    <a href="#browseSection" style="display: inline-block; margin-top: 10px; color: #2563eb; font-weight: 700; text-decoration: underline;">
+                        Browse published books below
+                    </a>
+                </div>
+            `;
+        } else {
+            myBooksGrid.innerHTML = myBooks.map((b, i) => `
+                <div class="book-card" onclick="readBook(${b.id})">
+                    <div class="book-cover ${COVERS[i % COVERS.length]}">
+                        <span>${EMOJIS[i % EMOJIS.length]}</span>
+                        <span class="cat-badge" style="background:#16a34a; color:#fff;">Purchased</span>
+                    </div>
+                    <div class="book-body">
+                        <h3 title="${escapeAttribute(b.title || '')}">${escapeHTML(b.title || 'Untitled Book')}</h3>
+                        <div class="bk-author">✍️ ${escapeHTML(b.author_name || 'Unknown Author')}</div>
+                        <div class="purchased-badge">✓ Unlocked</div>
+                        <button type="button" class="read-btn" style="background:#16a34a;" onclick="event.stopPropagation(); readBook(${b.id});">
+                            📖 Read Now
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+    }
+
+    // Render My Videos
+    if (myVideosGrid) {
+        if (!myVideos.length) {
+            myVideosGrid.innerHTML = `
+                <div class="empty-books" style="grid-column: 1/-1; padding: 40px 20px; text-align: center;">
+                    <div class="ei" style="font-size: 40px; margin-bottom: 8px;">🎬</div>
+                    <p style="color: #64748b; font-weight: 600;">You have not purchased any videos yet.</p>
+                    <a href="#studentVideoSection" style="display: inline-block; margin-top: 10px; color: #2563eb; font-weight: 700; text-decoration: underline;">
+                        Browse educational videos below
+                    </a>
+                </div>
+            `;
+        } else {
+            myVideosGrid.innerHTML = myVideos.map((v) => {
+                const id = Number(v.id);
+                const title = escapeHTML(v.title || "Educational Video");
+                const seller = escapeHTML(v.seller_name || "Creator");
+                const thumb = v.thumbnail ? `<img src="${v.thumbnail}" style="width:100%;height:180px;object-fit:cover;border-radius:12px 12px 0 0;">` : `<div style="height:180px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:36px;border-radius:12px 12px 0 0;">🎬</div>`;
+                return `
+                    <article class="student-video-card" style="cursor:pointer;" onclick="watchStudentVideo(${id})">
+                        <div style="position:relative;">
+                            ${thumb}
+                            <div class="student-video-play" onclick="watchStudentVideo(${id});" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">▶</div>
+                        </div>
+                        <div class="student-video-content" style="padding:16px;">
+                            <h3 style="font-size:1rem;margin-bottom:6px;">${title}</h3>
+                            <div style="font-size:0.85rem;color:#64748b;margin-bottom:12px;">By ${seller}</div>
+                            <button type="button" class="watch-video-btn" style="background:#16a34a;width:100%;" onclick="event.stopPropagation(); watchStudentVideo(${id});">
+                                ▶ Watch Video
+                            </button>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+        }
+    }
+
+    // Render Purchase History
+    if (myHistoryContainer) {
+        if (!studentPurchasesList.length) {
+            myHistoryContainer.innerHTML = `<div style="padding:30px; text-align:center; color:#64748b;">No purchase transactions found.</div>`;
+        } else {
+            myHistoryContainer.innerHTML = `
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+                    <thead>
+                        <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; color:#475569;">
+                            <th style="padding:12px 16px;">Item</th>
+                            <th style="padding:12px 16px;">Type</th>
+                            <th style="padding:12px 16px;">Amount Paid</th>
+                            <th style="padding:12px 16px;">Date</th>
+                            <th style="padding:12px 16px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${studentPurchasesList.map(p => {
+                            const isBook = p.item_type === "book" || p.book_id;
+                            const itemId = p.book_id || p.video_id;
+                            const dateStr = p.purchased_at ? new Date(p.purchased_at).toLocaleDateString() : 'Recent';
+                            return `
+                                <tr style="border-bottom:1px solid #f1f5f9;">
+                                    <td style="padding:12px 16px; font-weight:600; color:#1e293b;">${escapeHTML(p.title || 'Item #' + p.id)}</td>
+                                    <td style="padding:12px 16px;"><span style="padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; background:${isBook ? '#eff6ff; color:#2563eb' : '#fdf2f8; color:#db2777'};">${isBook ? '📚 Book' : '🎬 Video'}</span></td>
+                                    <td style="padding:12px 16px; font-weight:700; color:#16a34a;">₹${Number(p.amount || 0).toFixed(2)}</td>
+                                    <td style="padding:12px 16px; color:#64748b;">${dateStr}</td>
+                                    <td style="padding:12px 16px;">
+                                        ${isBook 
+                                            ? `<button type="button" onclick="readBook(${itemId})" style="padding:6px 12px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">Read Book</button>`
+                                            : `<button type="button" onclick="watchStudentVideo(${itemId})" style="padding:6px 12px; background:#0f766e; color:#fff; border:none; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">Watch Video</button>`
+                                        }
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
+                    </tbody>
+                </table>
+            `;
+        }
+    }
+}
 
 async function loadRazorpayConfig() {
     try {
@@ -2298,38 +2618,7 @@ async function loadStats(){
 
         /*
          * =====================================================
-         * EXISTING STUDENT STATS
-         * =====================================================
-         */
-
-        document.getElementById(
-            "st-read"
-        ).innerText =
-            d.books_read ?? 0;
-
-        document.getElementById(
-            "st-avail"
-        ).innerText =
-            d.total_available ?? 0;
-
-        document.getElementById(
-            "st-comments"
-        ).innerText =
-            d.total_comments ?? 0;
-
-        document.getElementById(
-            "st-streak"
-        ).innerText =
-            (d.streak ?? 0) + " 🔥";
-
-        document.getElementById(
-            "streakNum"
-        ).innerText =
-            d.streak ?? 0;
-
-        /*
-         * =====================================================
-         * NEW STUDENT ANALYTICS
+         * STUDENT ANALYTICS CARDS
          * =====================================================
          */
 
@@ -2373,9 +2662,29 @@ async function loadStats(){
                 (d.overall_progress ?? 0) + "%";
         }
 
+        const streakNum =
+            document.getElementById(
+                "streakNum"
+            );
+
+        if(streakNum){
+            streakNum.innerText =
+                d.streak ?? 0;
+        }
+
+        // Optional legacy IDs if present in DOM
+        const elRead = document.getElementById("st-read");
+        if (elRead) elRead.innerText = d.books_read ?? 0;
+        const elAvail = document.getElementById("st-avail");
+        if (elAvail) elAvail.innerText = d.total_available ?? 0;
+        const elComments = document.getElementById("st-comments");
+        if (elComments) elComments.innerText = d.total_comments ?? 0;
+        const elStreak = document.getElementById("st-streak");
+        if (elStreak) elStreak.innerText = (d.streak ?? 0) + " 🔥";
+
         /*
          * =====================================================
-         * STREAK
+         * STREAK DOTS
          * =====================================================
          */
 
@@ -2389,7 +2698,7 @@ async function loadStats(){
          * =====================================================
          */
 
-        if(!chartBuilt){
+        if(!chartBuilt && typeof Chart !== "undefined"){
 
             buildChart(
                 d.books_read ?? 0,
@@ -2409,6 +2718,18 @@ async function loadStats(){
 
     }
 
+}
+
+function buildStreakDots(streak){
+    const el = document.getElementById("streakDays");
+    if(!el) return;
+    const days = ["M", "T", "W", "T", "F", "S", "S"];
+    let html = "";
+    for(let i = 0; i < 7; i++){
+        const active = i < Math.min(Number(streak) || 0, 7);
+        html += `<div class="day-dot ${active ? 'day-active' : 'day-inactive'}">${days[i]}</div>`;
+    }
+    el.innerHTML = html;
 }
 function buildChart(
     read,
@@ -2452,8 +2773,8 @@ function buildChart(
                             "#f59e0b"
                         ],
 
-                        borderRadius: 10,
-
+                        borderRadius: 8,
+                        maxBarThickness: 32,
                         borderSkipped: false
                     }
                 ]
@@ -2546,6 +2867,7 @@ async function loadBooks(){
 
         updateCountLabel();
         renderBooks();
+        renderMyLibrary();
 
     }catch(e){
 
@@ -2565,8 +2887,7 @@ async function loadBooks(){
                 </div>
 
                 <p>
-                    Could not load books.
-                    Is the server running?
+                    Could not load books. Please refresh.
                 </p>
 
             </div>
@@ -2584,18 +2905,44 @@ async function loadBooks(){
 
 function updateCountLabel(){
 
-    document.getElementById(
-        "bookCountLabel"
-    ).innerText =
+    const label =
+        document.getElementById(
+            "bookCountLabel"
+        );
 
-        allBooks.length +
-        " book" +
-        (
-            allBooks.length !== 1
-            ? "s"
-            : ""
-        ) +
-        " available";
+    if(!label){
+        return;
+    }
+
+    let count =
+        allBooks.length;
+
+    if(activeTab === "other"){
+
+        count =
+            allBooks.filter(
+                b =>
+                    !KNOWN_CATS.includes(
+                        b.category
+                    )
+            ).length;
+
+    }
+
+    else if(activeTab !== "all"){
+
+        count =
+            allBooks.filter(
+                b =>
+                    (
+                        b.category || ""
+                    ) === activeTab
+            ).length;
+
+    }
+
+    label.innerText =
+        `${count} book${count !== 1 ? "s" : ""}`;
 
 }
 
@@ -2763,17 +3110,23 @@ function renderBooks(){
                 const price =
                     getBookPrice(b);
 
-                const paid =
-                    isPaidBook(b);
+                const isPurchased =
+                    studentPurchasedBookIds.has(Number(b.id));
+
+                const isFree =
+                    price <= 0;
+
+                const hasAccess =
+                    isFree || isPurchased;
 
                 return `
 
                 <div
                     class="book-card"
                     onclick="${
-                        paid
-                        ? `buyBook(${b.id})`
-                        : `readBook(${b.id})`
+                        hasAccess
+                        ? `readBook(${b.id})`
+                        : `buyBook(${b.id})`
                     }"
                 >
 
@@ -2793,13 +3146,15 @@ function renderBooks(){
                         </span>
 
                         ${
-                            b.category
-
+                            isPurchased && !isFree
                             ? `
-
-                                <span
-                                    class="cat-badge"
-                                >
+                                <span class="cat-badge" style="background:#16a34a; color:#fff;">
+                                    ✓ Purchased
+                                </span>
+                              `
+                            : b.category
+                            ? `
+                                <span class="cat-badge">
                                     ${escapeHTML(
                                         b.category
                                     )}
@@ -2854,28 +3209,26 @@ function renderBooks(){
                         </div>
 
                         ${
-                            paid
-
+                            isPurchased && !isFree
                             ? `
-
-                                <div class="book-price">
-                                    💰 ₹${price.toFixed(2)}
+                                <div class="purchased-badge">
+                                    ✓ Purchased
                                 </div>
 
                                 <button
                                     type="button"
-                                    class="buy-btn"
+                                    class="read-btn"
+                                    style="background:#16a34a;"
                                     onclick="
                                         event.stopPropagation();
-                                        buyBook(${b.id});
+                                        readBook(${b.id});
                                     "
                                 >
-                                    💳 Buy Now · ₹${price.toFixed(2)}
+                                    📖 Read Now
                                 </button>
-
                               `
-
-                            : `
+                            : isFree
+                            ? `
 
                                 <div class="free-label">
                                     ✓ Free
@@ -2890,6 +3243,24 @@ function renderBooks(){
                                     "
                                 >
                                     📖 Read Now
+                                </button>
+
+                              `
+                            : `
+
+                                <div class="book-price">
+                                    💰 ₹${price.toFixed(2)}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="buy-btn"
+                                    onclick="
+                                        event.stopPropagation();
+                                        buyBook(${b.id});
+                                    "
+                                >
+                                    💳 Buy Now · ₹${price.toFixed(2)}
                                 </button>
 
                               `
@@ -2952,6 +3323,12 @@ function buyBook(id){
 
     id = Number(id);
 
+    // If user has already purchased this book, directly open it!
+    if (studentPurchasedBookIds.has(id)) {
+        readBook(id);
+        return;
+    }
+
     const book =
         getBookById(id);
 
@@ -2993,6 +3370,9 @@ function buyBook(id){
 
         afterPayment:function(){
 
+            studentPurchasedBookIds.add(id);
+            renderBooks();
+            renderMyLibrary();
             window.location.href =
                 `/read/${id}?user_id=${STUDENT_ID}`;
 
@@ -3180,6 +3560,7 @@ async function loadStudentVideos(){
         displayStudentVideos(
             allStudentVideos
         );
+        renderMyLibrary();
 
     }catch(error){
 
@@ -3396,8 +3777,14 @@ function createStudentVideoCard(
     const price =
         getVideoPrice(video);
 
-    const paid =
-        isPaidVideo(video);
+    const isPurchased =
+        studentPurchasedVideoIds.has(id);
+
+    const isFree =
+        price <= 0;
+
+    const hasAccess =
+        isFree || isPurchased;
 
     let thumbnailHTML;
 
@@ -3470,10 +3857,19 @@ function createStudentVideoCard(
                 ${thumbnailHTML}
 
                 ${
-                    paid
-
+                    hasAccess
                     ? `
-
+                        <div
+                            class="student-video-play"
+                            onclick="
+                                watchStudentVideo(${id});
+                            "
+                            title="${isPurchased ? 'Watch Purchased Video' : 'Watch video'}"
+                        >
+                            ▶
+                        </div>
+                      `
+                    : `
                         <div
                             class="student-video-play"
                             onclick="
@@ -3483,77 +3879,57 @@ function createStudentVideoCard(
                         >
                             💳
                         </div>
-
-                      `
-
-                    : `
-
-                        <div
-                            class="student-video-play"
-                            onclick="
-                                watchStudentVideo(${id});
-                            "
-                            title="Watch video"
-                        >
-                            ▶
-                        </div>
-
                       `
                 }
 
                 ${
                     category
-
                     ? `
-
                         <div
                             class="video-category"
                         >
                             ${category}
                         </div>
-
                       `
-
                     : ""
                 }
 
                 ${
-                    paid
-
+                    isPurchased && !isFree
                     ? `
-
                         <div
                             class="video-paid-badge"
+                            style="background:#16a34a; color:#fff;"
                         >
-                            💳 PAID
+                            ✓ PURCHASED
                         </div>
-
                       `
-
-                    : `
-
+                    : isFree
+                    ? `
                         <div
                             class="video-free-badge"
                         >
                             FREE
                         </div>
-
+                      `
+                    : `
+                        <div
+                            class="video-paid-badge"
+                        >
+                            💳 PAID
+                        </div>
                       `
                 }
 
                 ${
                     duration
-
                     ? `
-
                         <div
                             class="video-duration"
                         >
                             ${duration}
                         </div>
-
                       `
-
                     : ""
                 }
 
@@ -3609,34 +3985,47 @@ function createStudentVideoCard(
                 </div>
 
                 ${
-                    paid
-
+                    isPurchased && !isFree
                     ? `
-
                         <div
-                            class="student-video-price"
+                            class="purchased-badge"
+                            style="margin-bottom: 8px;"
                         >
-                            ₹${price.toFixed(2)}
+                            ✓ Purchased
                         </div>
-
                       `
-
-                    : `
-
+                    : isFree
+                    ? `
                         <div
                             class="student-video-price"
                         >
                             Free
                         </div>
-
+                      `
+                    : `
+                        <div
+                            class="student-video-price"
+                        >
+                            ₹${price.toFixed(2)}
+                        </div>
                       `
                 }
 
                 ${
-                    paid
-
+                    hasAccess
                     ? `
-
+                        <button
+                            type="button"
+                            class="watch-video-btn"
+                            style="${isPurchased && !isFree ? 'background:#16a34a;' : ''}"
+                            onclick="
+                                watchStudentVideo(${id});
+                            "
+                        >
+                            ▶ Watch Video ${isPurchased && !isFree ? '(Purchased)' : ''}
+                        </button>
+                      `
+                    : `
                         <button
                             type="button"
                             class="buy-video-btn"
@@ -3646,21 +4035,6 @@ function createStudentVideoCard(
                         >
                             💳 Buy / Pay ₹${price.toFixed(2)}
                         </button>
-
-                      `
-
-                    : `
-
-                        <button
-                            type="button"
-                            class="watch-video-btn"
-                            onclick="
-                                watchStudentVideo(${id});
-                            "
-                        >
-                            ▶ Watch Video
-                        </button>
-
                       `
                 }
 
@@ -3727,6 +4101,12 @@ function buyVideo(id){
     id =
         Number(id);
 
+    // If user has already purchased this video, directly watch it!
+    if (studentPurchasedVideoIds.has(id)) {
+        watchStudentVideo(id);
+        return;
+    }
+
     const video =
         getVideoById(id);
 
@@ -3768,6 +4148,9 @@ function buyVideo(id){
 
         afterPayment:function(){
 
+            studentPurchasedVideoIds.add(id);
+            displayStudentVideos(allStudentVideos);
+            renderMyLibrary();
             window.location.href =
                 `/video/${id}?student_id=${STUDENT_ID}`;
 
@@ -3890,176 +4273,131 @@ function closePaymentModal(){
     currentPurchase =
         null;
 
+    cleanupPaymentListeners();
 }
 
 
 /* =========================================================
-   PAYMENT CONFIRMATION
+   CROSS-TAB PAYMENT LISTENERS & NEW TAB CONTROLLER
 ========================================================= */
 
-async function handleRazorpayPayment(purchase, button, status) {
-    if (!razorpayConfig.enabled || typeof Razorpay === "undefined") {
-        throw new Error("Razorpay checkout is not available. Please configure the API keys.");
+let paymentPollingInterval = null;
+let activePaymentTab = null;
+
+function cleanupPaymentListeners() {
+    if (paymentPollingInterval) {
+        clearInterval(paymentPollingInterval);
+        paymentPollingInterval = null;
+    }
+}
+
+// Global listener for postMessage from payment tab
+window.addEventListener("message", function(event) {
+    if (event.data && event.data.type === "PAYMENT_SUCCESS") {
+        handleCrossTabPaymentSuccess(event.data);
+    } else if (event.data && event.data.type === "PAYMENT_CANCELLED") {
+        handleCrossTabPaymentCancel(event.data);
+    }
+});
+
+// Global listener for storage events (localStorage updated in other tab)
+window.addEventListener("storage", function(event) {
+    if (event.key === "edunote_payment_event" && event.newValue) {
+        try {
+            const data = JSON.parse(event.newValue);
+            if (data && data.type === "PAYMENT_SUCCESS") {
+                handleCrossTabPaymentSuccess(data);
+            } else if (data && data.type === "PAYMENT_CANCELLED") {
+                handleCrossTabPaymentCancel(data);
+            }
+        } catch (e) {}
+    }
+});
+
+// BroadcastChannel listener
+if (typeof BroadcastChannel !== "undefined") {
+    try {
+        const paymentBc = new BroadcastChannel("edunote_payment");
+        paymentBc.onmessage = function(event) {
+            if (event.data && event.data.type === "PAYMENT_SUCCESS") {
+                handleCrossTabPaymentSuccess(event.data);
+            } else if (event.data && event.data.type === "PAYMENT_CANCELLED") {
+                handleCrossTabPaymentCancel(event.data);
+            }
+        };
+    } catch (e) {}
+}
+
+function handleCrossTabPaymentSuccess(data) {
+    cleanupPaymentListeners();
+    const button = document.getElementById("paymentConfirmBtn");
+    const status = document.getElementById("paymentStatus");
+
+    // Bring this tab back to focus
+    try {
+        window.focus();
+    } catch(e) {}
+
+    if (status) {
+        status.style.color = "#16a34a";
+        status.innerHTML = "<strong>✅ Payment complete! Opening your content...</strong>";
+    }
+    if (button) {
+        button.innerText = "Paid ✓";
+        button.disabled = true;
     }
 
-    const orderPayload = {
-        amount: Number(purchase.amount),
-        payment_for: `Purchase ${purchase.type}: ${purchase.name}`,
-        item_id: Number(purchase.id),
-        item_type: purchase.type === "book" ? "book" : "video",
-        user_id: Number(STUDENT_ID)
-    };
+    const next = currentPurchase ? currentPurchase.afterPayment : null;
+    const itemType = currentPurchase ? currentPurchase.type : (data && data.item_type ? data.item_type : "book");
+    const itemId = currentPurchase ? Number(currentPurchase.id) : (data && data.item_id ? Number(data.item_id) : 0);
 
-    status.style.color = "";
-    status.innerText = "Preparing Razorpay checkout...";
+    if (itemType === "video" && itemId) {
+        studentPurchasedVideoIds.add(itemId);
+    } else if (itemId) {
+        studentPurchasedBookIds.add(itemId);
+    }
 
-    const orderResponse = await fetch("/payment/razorpay/order", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify(orderPayload)
+    // Refresh purchased items and library in background
+    loadStudentPurchases().then(() => {
+        renderBooks();
+        displayStudentVideos(allStudentVideos);
+        renderMyLibrary();
     });
 
-    const orderData = await orderResponse.json().catch(() => ({}));
-
-    if (!orderResponse.ok) {
-        throw new Error(orderData.detail || orderData.message || "Razorpay order could not be created.");
-    }
-
-    const rzp = new Razorpay({
-        key: orderData.key_id,
-        amount: Number(orderData.amount),
-        currency: orderData.currency || "INR",
-        name: "EduNote",
-        description: `Purchase ${purchase.type}: ${purchase.name}`,
-        order_id: orderData.order_id,
-        handler: async function (response) {
-            status.style.color = "";
-            status.innerText = "Verifying Razorpay payment...";
-
-            try {
-                const verifyResponse = await fetch("/payment/razorpay/verify", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        payment_id: Number(orderData.payment_id),
-                        order_id: response.razorpay_order_id,
-                        signature: response.razorpay_signature,
-                        razorpay_payment_id: response.razorpay_payment_id
-                    })
-                });
-
-                const verifyData = await verifyResponse.json().catch(() => ({}));
-
-                if (!verifyResponse.ok) {
-                    throw new Error(verifyData.detail || verifyData.message || "Payment verification failed.");
-                }
-
-                const paidPaymentId = Number(verifyData.payment_id || orderData.payment_id);
-                status.style.color = "#16a34a";
-                status.innerText = `Payment successful! Payment #${paidPaymentId}. Opening your item...`;
-                button.innerText = "Paid ✓";
-
-                setTimeout(() => {
-                    const next = purchase.afterPayment;
-                    closePaymentModal();
-                    if (typeof next === "function") {
-                        next();
-                    }
-                }, 700);
-            } catch (error) {
-                console.error("Razorpay verification error:", error);
-                status.style.color = "#dc2626";
-                status.innerText = error.message || "Razorpay payment verification failed.";
-                button.disabled = false;
-                button.innerText = "Pay Now";
-            }
-        },
-        prefill: {
-            name: "EduNote Student",
-            email: "student@edunote.app"
-        },
-        theme: {
-            color: "#0f766e"
-        },
-        modal: {
-            ondismiss: function () {
-                status.style.color = "#dc2626";
-                status.innerText = "Payment cancelled.";
-                button.disabled = false;
-                button.innerText = "Pay Now";
-            }
+    setTimeout(() => {
+        closePaymentModal();
+        if (typeof next === "function") {
+            next();
+        } else if (itemType === "video" && itemId) {
+            window.location.href = `/video/${itemId}?student_id=${STUDENT_ID}`;
+        } else if (itemType === "book" && itemId) {
+            window.location.href = `/read/${itemId}?user_id=${STUDENT_ID}`;
+        } else {
+            renderBooks();
+            displayStudentVideos(allStudentVideos);
+            renderMyLibrary();
         }
-    });
+    }, 600);
+}
 
-    rzp.on('payment.failed', function (response) {
-        const errorDescription = response && response.error && response.error.description
-            ? response.error.description
-            : "Payment cancelled.";
+function handleCrossTabPaymentCancel(data) {
+    const button = document.getElementById("paymentConfirmBtn");
+    const status = document.getElementById("paymentStatus");
+
+    if (status) {
         status.style.color = "#dc2626";
-        status.innerText = errorDescription;
+        status.innerText = data.error || "Payment was cancelled in the other tab.";
+    }
+    if (button) {
         button.disabled = false;
         button.innerText = "Pay Now";
-    });
-
-    rzp.open();
+    }
 }
 
-async function handlePayUPayment(purchase, button, status) {
-    const orderPayload = {
-        amount: Number(purchase.amount),
-        payment_for: `Purchase ${purchase.type}: ${purchase.name}`,
-        item_id: Number(purchase.id),
-        item_type: purchase.type === "book" ? "book" : "video",
-        user_id: Number(STUDENT_ID)
-    };
 
-    status.style.color = "";
-    status.innerText = "Connecting to PayU sandbox...";
-
-    const orderResponse = await fetch("/payment/payu/order", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify(orderPayload)
-    });
-
-    const orderData = await orderResponse.json().catch(() => ({}));
-
-    if (!orderResponse.ok || !orderData.params) {
-        throw new Error(orderData.detail || orderData.message || "PayU order could not be created.");
-    }
-
-    status.innerText = "Redirecting to PayU sandbox...";
-
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = orderData.action_url;
-    form.style.display = "none";
-
-    for (const key in orderData.params) {
-        if (Object.prototype.hasOwnProperty.call(orderData.params, key)) {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = key;
-            input.value = orderData.params[key];
-            form.appendChild(input);
-        }
-    }
-
-    document.body.appendChild(form);
-    form.submit();
-}
+/* =========================================================
+   PAYMENT CONFIRMATION (OPENS IN NEW TAB)
+========================================================= */
 
 async function confirmPurchase(){
 
@@ -4088,46 +4426,42 @@ async function confirmPurchase(){
         return;
     }
 
-    if (method === "PayU") {
-        button.disabled = true;
-        button.innerText = "Opening PayU...";
-        status.style.color = "";
-        status.innerText = "Connecting to PayU...";
+    cleanupPaymentListeners();
 
+    // Prepare URL for the payment gateway in the new tab
+    const gatewayUrl = `/payment/gateway?item_type=${encodeURIComponent(currentPurchase.type)}&item_id=${encodeURIComponent(currentPurchase.id)}&method=${encodeURIComponent(method)}&amount=${encodeURIComponent(currentPurchase.amount)}&user_id=${encodeURIComponent(STUDENT_ID)}`;
+
+    // OPEN PAYMENT GATEWAY IN ANOTHER TAB!
+    activePaymentTab = window.open(gatewayUrl, "_blank");
+
+    button.disabled = true;
+    button.innerText = "⏳ Waiting for Payment in New Tab...";
+    status.style.color = "#2563eb";
+    status.innerHTML = `<div style="padding: 10px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; margin-top: 8px;">
+        <span style="font-weight: 600; display: block; margin-bottom: 4px;">⏳ Payment gateway opened in another tab.</span>
+        <span style="font-size: 0.85rem; color: #475569;">Please complete your payment in the new tab. This window will automatically unlock access once payment finishes.</span>
+        <div style="margin-top: 8px;">
+            <a href="${gatewayUrl}" target="_blank" style="display: inline-block; font-size: 0.82rem; color: #1d4ed8; font-weight: 700; text-decoration: underline;">
+                Click here if payment tab didn't open
+            </a>
+        </div>
+    </div>`;
+
+    // Start background polling to verify access in case postMessage/storage was blocked
+    const itemType = currentPurchase.type;
+    const itemId = currentPurchase.id;
+
+    paymentPollingInterval = setInterval(async () => {
         try {
-            await handlePayUPayment(currentPurchase, button, status);
-            return;
-        } catch (error) {
-            console.error("PayU setup error:", error);
-            status.style.color = "#dc2626";
-            status.innerText = error.message || "PayU checkout could not be started.";
-            button.disabled = false;
-            button.innerText = "Pay Now";
-            return;
-        }
-    }
-
-    if (method === "Razorpay") {
-        button.disabled = true;
-        button.innerText = "Opening Razorpay...";
-        status.style.color = "";
-        status.innerText = "Preparing Razorpay checkout...";
-
-        try {
-            await handleRazorpayPayment(currentPurchase, button, status);
-            return;
-        } catch (error) {
-            console.error("Razorpay setup error:", error);
-            status.style.color = "#dc2626";
-            status.innerText = error.message || "Razorpay checkout could not be started.";
-            button.disabled = false;
-            button.innerText = "Pay Now";
-            return;
-        }
-    }
-
-    status.style.color = "#dc2626";
-    status.innerText = "Please select either PayU or Razorpay.";
+            const res = await fetch(`/api/check-access/${itemType}/${itemId}`, { cache: "no-store" });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.has_access) {
+                    handleCrossTabPaymentSuccess({ item_type: itemType, item_id: itemId });
+                }
+            }
+        } catch (e) {}
+    }, 1500);
 }
 
 
@@ -4223,9 +4557,13 @@ document.querySelectorAll(".sidebar .menu a, .sidebar-footer a").forEach(link =>
 
 loadStats();
 
-loadBooks();
-
-loadStudentVideos();
+loadStudentPurchases().then(() => {
+    loadBooks();
+    loadStudentVideos();
+}).catch(() => {
+    loadBooks();
+    loadStudentVideos();
+});
 
 // Handle PayU return status notifications
 const urlParams = new URLSearchParams(window.location.search);

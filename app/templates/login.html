@@ -95,6 +95,62 @@
             background: #1e40af;
         }
 
+        .auth-alert {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            color: #991b1b;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .auth-alert.info {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .alert-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background .2s ease;
+        }
+
+        .alert-btn.btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .alert-btn.btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .alert-btn.btn-secondary {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-btn.btn-secondary:hover {
+            background: #fecaca;
+        }
+
         @media (max-width: 720px) {
             .auth-card { grid-template-columns: 1fr; max-width: 460px; }
             .auth-art { min-height: 250px; background-size: 200% 100%; }
@@ -122,6 +178,14 @@
             </p>
 
             <h2>Login</h2>
+
+            <div id="authAlert" class="auth-alert {% if already_logged_in %}info{% endif %}" style="display: {% if error %}block{% else %}none{% endif %};">
+                <p id="alertMessage" style="margin: 0;">{% if error %}{{ error }}{% endif %}</p>
+                <div id="alertActions" class="alert-actions" style="display: {% if already_logged_in %}flex{% else %}none{% endif %};">
+                    <a id="dashboardLink" href="{% if dashboard_url %}{{ dashboard_url }}{% else %}#{% endif %}" class="alert-btn btn-primary">Go to Active Dashboard</a>
+                    <a href="/logout" class="alert-btn btn-secondary">Log Out to Switch Account</a>
+                </div>
+            </div>
 
             <form id="loginForm">
 

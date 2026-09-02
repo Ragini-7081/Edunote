@@ -158,7 +158,25 @@ select{
 
 </div>
 
-<script >
+<script>
+// Check if user is currently logged in on the server
+async function checkAuthStatus() {
+    try {
+        const response = await fetch("/api/auth/status", {
+            headers: { "Accept": "application/json" },
+            cache: "no-store"
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.logged_in && data.dashboard_url) {
+                window.location.replace(data.dashboard_url);
+            }
+        }
+    } catch (err) {}
+}
+window.addEventListener("pageshow", checkAuthStatus);
+document.addEventListener("DOMContentLoaded", checkAuthStatus);
+
 const form = document.getElementById("registerForm");
 
 form.addEventListener("submit", function(e){

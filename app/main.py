@@ -206,6 +206,40 @@ app.add_middleware(
 
 
 # ==================================================
+# HOST NORMALIZATION & CACHE CONTROL MIDDLEWARE
+# ==================================================
+
+@app.middleware("http")
+async def host_and_cache_middleware(request: Request, call_next):
+    # Host normalization: if user visits localhost, redirect to 127.0.0.1
+    # so session cookies are always unified on IPv4 127.0.0.1 across all tabs
+    host = request.url.hostname
+    if host == "localhost":
+        port = request.url.port
+        netloc = f"127.0.0.1:{port}" if port else "127.0.0.1"
+        new_url = request.url.replace(netloc=netloc)
+        return RedirectResponse(url=str(new_url), status_code=307)
+
+    response = await call_next(request)
+
+    # Disable caching on all auth pages and protected dashboards
+    path = request.url.path
+    if (
+        path in ["/", "/login", "/register", "/logout"]
+        or path.startswith("/student")
+        or path.startswith("/author")
+        or path.startswith("/video-seller")
+        or path.startswith("/seller")
+        or path.startswith("/api/auth")
+    ):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+    return response
+
+
+# ==================================================
 # OPEN BROWSER AUTOMATICALLY
 # ==================================================
 
@@ -305,6 +339,31 @@ templates = Jinja2Templates(
 
 
 # ==================================================
+# HELPER: DASHBOARD REDIRECT & URL
+# ==================================================
+
+def get_user_dashboard_url(user: models.User) -> str:
+    user_role = str(user.role or "").strip().lower().replace("_", " ").replace("-", " ")
+    user_role = " ".join(user_role.split())
+
+    if user_role in ["student", "students"]:
+        return f"/student/{user.id}"
+    elif user_role in ["author", "authors"]:
+        return f"/author/{user.id}"
+    elif user_role in ["video seller", "video sellers", "videoseller", "videosellers", "seller"]:
+        return "/video-seller"
+
+    return f"/student/{user.id}"
+
+
+def get_user_dashboard_redirect(user: models.User) -> RedirectResponse:
+    return RedirectResponse(
+        url=get_user_dashboard_url(user),
+        status_code=303
+    )
+
+
+# ==================================================
 # LOGIN PAGE
 # ==================================================
 
@@ -312,9 +371,22 @@ templates = Jinja2Templates(
     "/",
     response_class=HTMLResponse
 )
+@app.get(
+    "/login",
+    response_class=HTMLResponse
+)
 def login_page(
-    request: Request
+    request: Request,
+    db: Session = Depends(get_db)
 ):
+    session_user_id = request.session.get("user_id")
+    if session_user_id:
+        user = crud.get_user_by_id(db, session_user_id)
+        if user:
+            return get_user_dashboard_redirect(user)
+        else:
+            request.session.clear()
+
     return templates.TemplateResponse(
         request=request,
         name="login.html"
@@ -330,8 +402,17 @@ def login_page(
     response_class=HTMLResponse
 )
 def register_page(
-    request: Request
+    request: Request,
+    db: Session = Depends(get_db)
 ):
+    session_user_id = request.session.get("user_id")
+    if session_user_id:
+        user = crud.get_user_by_id(db, session_user_id)
+        if user:
+            return get_user_dashboard_redirect(user)
+        else:
+            request.session.clear()
+
     return templates.TemplateResponse(
         request=request,
         name="register.html"
@@ -473,6 +554,50 @@ def login(
     remember_me: str = Form(None),
     db: Session = Depends(get_db)
 ):
+    accept_header = request.headers.get("accept", "")
+    is_json_request = "application/json" in accept_header or request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+    session_user_id = request.session.get("user_id")
+    if session_user_id:
+        current_session_user = crud.get_user_by_id(db, session_user_id)
+        if current_session_user:
+            dashboard_url = get_user_dashboard_url(current_session_user)
+            # If logging in with the same account, redirect to active dashboard
+            if current_session_user.email.strip().lower() == email.strip().lower():
+                if is_json_request:
+                    return {
+                        "success": True,
+                        "message": "Already logged in",
+                        "redirect_url": dashboard_url
+                    }
+                return get_user_dashboard_redirect(current_session_user)
+
+            # An account is ALREADY logged in on this browser, and user is attempting to login with another account!
+            # BLOCK THIS to prevent multi-account session collision / hijacking across tabs!
+            error_msg = f"Another account ({current_session_user.email}) is already logged in on this browser. Please log out first before signing in with a different account."
+            if is_json_request:
+                return {
+                    "success": False,
+                    "already_logged_in": True,
+                    "current_user_email": current_session_user.email,
+                    "current_user_name": current_session_user.full_name or current_session_user.username,
+                    "dashboard_url": dashboard_url,
+                    "message": error_msg
+                }
+
+            return templates.TemplateResponse(
+                name="login.html",
+                request=request,
+                context={
+                    "error": error_msg,
+                    "already_logged_in": True,
+                    "current_user_email": current_session_user.email,
+                    "dashboard_url": dashboard_url
+                },
+                status_code=400
+            )
+        else:
+            request.session.clear()
 
     user = crud.get_user_by_email(
         db,
@@ -480,7 +605,11 @@ def login(
     )
 
     if not user or user.password != password:
-
+        if is_json_request:
+            return {
+                "success": False,
+                "message": "Invalid email or password"
+            }
         return templates.TemplateResponse(
             name="login.html",
             request=request,
@@ -501,61 +630,18 @@ def login(
     if remember_me:
         request.session["remember_me"] = True
 
-    user_role = str(
-        user.role or ""
-    ).strip().lower()
+    dashboard_url = get_user_dashboard_url(user)
+    if is_json_request:
+        return {
+            "success": True,
+            "message": "Login successful",
+            "redirect_url": dashboard_url,
+            "user_id": user.id,
+            "email": user.email,
+            "role": user.role
+        }
 
-    user_role = (
-        user_role
-        .replace("_", " ")
-        .replace("-", " ")
-    )
-
-    user_role = " ".join(
-        user_role.split()
-    )
-
-    if user_role in [
-        "student",
-        "students"
-    ]:
-
-        return RedirectResponse(
-            url=f"/student/{user.id}",
-            status_code=303
-        )
-
-    elif user_role in [
-        "author",
-        "authors"
-    ]:
-
-        return RedirectResponse(
-            url=f"/author/{user.id}",
-            status_code=303
-        )
-
-    elif user_role in [
-        "video seller",
-        "video sellers",
-        "videoseller",
-        "videosellers",
-        "seller"
-    ]:
-
-        return RedirectResponse(
-            url="/video-seller",
-            status_code=303
-        )
-
-    return templates.TemplateResponse(
-        name="login.html",
-        request=request,
-        context={
-            "error": "Invalid user role: " + str(user.role)
-        },
-        status_code=400
-    )
+    return get_user_dashboard_redirect(user)
 
 
 # ==================================================
@@ -567,26 +653,29 @@ def login(
     response_class=HTMLResponse
 )
 def author_dashboard(
-
     user_id: int,
-
     request: Request,
-
     db: Session = Depends(get_db)
-
 ):
-
-    user = db.query(
-        models.User
-    ).filter(
-        models.User.id == user_id
-    ).first()
-
-    if not user:
+    session_user_id = request.session.get("user_id")
+    if not session_user_id:
         return RedirectResponse(
             "/",
             status_code=303
         )
+
+    session_user = crud.get_user_by_id(db, session_user_id)
+    if not session_user:
+        request.session.clear()
+        return RedirectResponse(
+            "/",
+            status_code=303
+        )
+
+    if session_user.id != user_id:
+        return get_user_dashboard_redirect(session_user)
+
+    user = session_user
 
     return templates.TemplateResponse(
         request=request,
@@ -768,26 +857,29 @@ def author_comments(
     response_class=HTMLResponse
 )
 def student_dashboard(
-
     user_id: int,
-
     request: Request,
-
     db: Session = Depends(get_db)
-
 ):
-
-    user = db.query(
-        models.User
-    ).filter(
-        models.User.id == user_id
-    ).first()
-
-    if not user:
+    session_user_id = request.session.get("user_id")
+    if not session_user_id:
         return RedirectResponse(
             "/",
             status_code=303
         )
+
+    session_user = crud.get_user_by_id(db, session_user_id)
+    if not session_user:
+        request.session.clear()
+        return RedirectResponse(
+            "/",
+            status_code=303
+        )
+
+    if session_user.id != user_id:
+        return get_user_dashboard_redirect(session_user)
+
+    user = session_user
 
     # Get purchase count
     purchases = crud.get_user_purchases(db, user_id)
@@ -1991,6 +2083,12 @@ def normalize_video_url(filename):
     while raw.startswith("//"):
         raw = raw[1:]
 
+    # Clean double uploads/videos prefixes
+    if "uploads/videos/" in raw:
+        parts = raw.split("uploads/videos/")
+        clean_name = parts[-1].lstrip("/")
+        return f"/static/uploads/videos/{clean_name}"
+
     if raw.startswith(
         "/static/uploads/videos/"
     ):
@@ -2072,6 +2170,11 @@ def normalize_thumbnail_url(thumbnail):
 
     while raw.startswith("//"):
         raw = raw[1:]
+
+    if "uploads/thumbnails/" in raw:
+        parts = raw.split("uploads/thumbnails/")
+        clean_name = parts[-1].lstrip("/")
+        return f"/static/uploads/thumbnails/{clean_name}"
 
     if raw.startswith(
         "/static/uploads/thumbnails/"
@@ -2593,8 +2696,17 @@ async def upload_seller_video(
     # Store in Database
     # --------------------------------------------------------
 
-    stored_video_path = video_filename if cloudinary_enabled() else f"uploads/videos/{video_filename}"
-    stored_thumbnail_path = thumbnail_filename if cloudinary_enabled() and thumbnail_url else (f"uploads/thumbnails/{thumbnail_filename}" if thumbnail_filename else "")
+    if cloudinary_enabled() and video_url:
+        stored_video_path = video_url
+    else:
+        stored_video_path = f"/static/uploads/videos/{Path(video_filename).name}"
+
+    if cloudinary_enabled() and thumbnail_url:
+        stored_thumbnail_path = thumbnail_url
+    elif thumbnail_filename:
+        stored_thumbnail_path = f"/static/uploads/thumbnails/{Path(thumbnail_filename).name}"
+    else:
+        stored_thumbnail_path = ""
 
     try:
 
@@ -2756,8 +2868,17 @@ def student_video_page(
             e
         )
 
+    video_url = normalize_video_url(
+        video.filename
+    )
+
+    thumbnail_url = normalize_thumbnail_url(
+        video.thumbnail
+    )
+
     video_data = video_to_dict(
-        video
+        video,
+        db
     )
 
     return templates.TemplateResponse(
@@ -2770,11 +2891,21 @@ def student_video_page(
 
             "video": video,
 
+            "video_url": video_url,
+
+            "thumbnail_url": thumbnail_url,
+
             "video_data": video_data,
 
             "user": video.seller,
 
             "student_id": (
+                int(student_id)
+                if str(student_id).isdigit()
+                else 0
+            ),
+
+            "user_id": (
                 int(student_id)
                 if str(student_id).isdigit()
                 else 0
@@ -2837,6 +2968,14 @@ def watch_video(
             e
         )
 
+    video_url = normalize_video_url(
+        video.filename
+    )
+
+    thumbnail_url = normalize_thumbnail_url(
+        video.thumbnail
+    )
+
     video_data = video_to_dict(
         video,
         db
@@ -2847,9 +2986,16 @@ def watch_video(
         name="videowatch.html",
         context={
             "video": video,
+            "video_url": video_url,
+            "thumbnail_url": thumbnail_url,
             "video_data": video_data,
             "user": video.seller,
             "user_id": (
+                int(user_id)
+                if str(user_id).isdigit()
+                else 0
+            ),
+            "student_id": (
                 int(user_id)
                 if str(user_id).isdigit()
                 else 0
@@ -4767,6 +4913,10 @@ async def payu_response_callback(
     user_id = payment.user_id if payment else request.session.get("user_id", 1)
 
     if status == "success" and is_valid_hash:
+        item_type = "book"
+        item_id = 0
+        redirect_url = f"/student/{user_id}?payment=success"
+
         if payment:
             payment = crud.update_payment_status(
                 db,
@@ -4778,11 +4928,64 @@ async def payu_response_callback(
             finalize_successful_payment(db, payment)
 
             if payment.book_id:
-                return RedirectResponse(url=f"/read/{payment.book_id}?user_id={user_id}&payment=success", status_code=303)
+                item_type = "book"
+                item_id = payment.book_id
+                redirect_url = f"/read/{payment.book_id}?user_id={user_id}&payment=success"
             elif payment.video_id:
-                return RedirectResponse(url=f"/video/{payment.video_id}?user_id={user_id}&payment=success", status_code=303)
+                item_type = "video"
+                item_id = payment.video_id
+                redirect_url = f"/video/{payment.video_id}?user_id={user_id}&payment=success"
 
-        return RedirectResponse(url=f"/student/{user_id}?payment=success", status_code=303)
+        html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>EduNote - Payment Completed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const payload = {{
+            type: "PAYMENT_SUCCESS",
+            payment_id: {payment.id if payment else 0},
+            item_type: "{item_type}",
+            item_id: {item_id},
+            timestamp: Date.now()
+        }};
+        try {{
+            localStorage.setItem("edunote_payment_event", JSON.stringify(payload));
+            localStorage.setItem("payment_status", JSON.stringify({{ success: true, ...payload }}));
+            if (window.opener) {{
+                window.opener.postMessage(payload, "*");
+                try {{ window.opener.focus(); }} catch(e) {{}}
+            }}
+            if (typeof BroadcastChannel !== "undefined") {{
+                const bc = new BroadcastChannel("edunote_payment");
+                bc.postMessage(payload);
+            }}
+        }} catch(e) {{}}
+
+        // Close this payment tab and switch back to opener tab
+        setTimeout(function() {{
+            if (window.opener) {{
+                try {{ window.opener.focus(); }} catch(e) {{}}
+            }}
+            window.close();
+            // Fallback redirect if window.close() is blocked by browser policy
+            setTimeout(function() {{
+                window.location.replace("{redirect_url}");
+            }}, 600);
+        }}, 500);
+    </script>
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; text-align: center; padding: 20px;">
+    <div style="background: white; padding: 36px 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 440px; width: 100%;">
+        <div style="font-size: 52px; margin-bottom: 12px;">✅</div>
+        <h2 style="color: #16a34a; margin-bottom: 8px; font-size: 1.4rem;">Payment Successful!</h2>
+        <p style="color: #64748b; margin-bottom: 20px; font-size: 0.95rem;">Payment complete! Closing this tab and returning to EduNote...</p>
+        <button onclick="window.close(); window.location.replace('{redirect_url}');" style="display: inline-block; padding: 11px 22px; background: #2563eb; color: white; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Done (Close Tab)</button>
+    </div>
+</body>
+</html>"""
+        return HTMLResponse(content=html_content)
+
     else:
         if payment:
             crud.update_payment_status(
@@ -4792,7 +4995,40 @@ async def payu_response_callback(
                 payment_method="PayU",
                 transaction_id=txnid
             )
-        return RedirectResponse(url=f"/student/{user_id}?payment=cancelled", status_code=303)
+
+        cancel_url = f"/student/{user_id}?payment=cancelled"
+        html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>EduNote - Payment Cancelled</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const payload = {{
+            type: "PAYMENT_CANCELLED",
+            error: "Payment was cancelled or failed",
+            timestamp: Date.now()
+        }};
+        try {{
+            localStorage.setItem("edunote_payment_event", JSON.stringify(payload));
+            if (window.opener) {{
+                window.opener.postMessage(payload, "*");
+            }}
+        }} catch(e) {{}}
+        setTimeout(function() {{
+            window.location.replace("{cancel_url}");
+        }}, 2000);
+    </script>
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; text-align: center; padding: 20px;">
+    <div style="background: white; padding: 36px 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 440px; width: 100%;">
+        <div style="font-size: 52px; margin-bottom: 12px;">⚠️</div>
+        <h2 style="color: #dc2626; margin-bottom: 8px; font-size: 1.4rem;">Payment Cancelled</h2>
+        <p style="color: #64748b; margin-bottom: 20px; font-size: 0.95rem;">Your payment was not completed.</p>
+        <a href="{cancel_url}" style="display: inline-block; padding: 11px 22px; background: #f1f5f9; color: #475569; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Return to Dashboard</a>
+    </div>
+</body>
+</html>"""
+        return HTMLResponse(content=html_content)
 
 
 @app.post("/payment/{payment_id}/status")
@@ -5077,6 +5313,59 @@ def payment_page(
     return response
 
 
+# ==================================================
+# PAYMENT GATEWAY (NEW TAB)
+# ==================================================
+
+@app.get("/payment/gateway", response_class=HTMLResponse)
+def payment_gateway_page(
+    request: Request,
+    item_type: str = "book",
+    item_id: int = 0,
+    method: str = "Razorpay",
+    amount: float = 0.0,
+    user_id: int = 0,
+    db: Session = Depends(get_db)
+):
+    final_user_id = user_id or request.session.get("user_id", 0)
+    user = crud.get_user_by_id(db, final_user_id) if final_user_id else None
+
+    item_name = "EduNote Item"
+    item_price = amount
+
+    if item_type.lower() == "book" and item_id:
+        book = crud.get_book(db, item_id)
+        if book:
+            item_name = f"Book: {book.title}"
+            item_price = float(book.price or amount or 0.0)
+    elif item_type.lower() == "video" and item_id:
+        video = crud.get_video(db, item_id)
+        if video:
+            item_name = f"Video: {video.title}"
+            item_price = float(video.price or amount or 0.0)
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="payment_gateway.html",
+        context={
+            "user_id": final_user_id,
+            "user": user,
+            "item_type": item_type.lower(),
+            "item_id": item_id,
+            "item_name": item_name,
+            "amount": item_price,
+            "method": method,
+            "razorpay_enabled": razorpay_enabled(),
+            "razorpay_key_id": RAZORPAY_KEY_ID or "",
+            "payu_enabled": bool(PAYU_MERCHANT_KEY and PAYU_MERCHANT_SALT)
+        }
+    )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 @app.get("/student/{user_id}/purchases")
 def get_student_purchases(
     user_id: int,
@@ -5220,3 +5509,33 @@ def check_item_access(
         "has_access": has_access,
         "user_id": final_user_id
     }
+
+
+# ==================================================
+# AUTH STATUS API
+# ==================================================
+
+@app.get("/api/auth/status")
+def auth_status(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    session_user_id = request.session.get("user_id")
+    if not session_user_id:
+        return {"logged_in": False}
+
+    user = crud.get_user_by_id(db, session_user_id)
+    if not user:
+        request.session.clear()
+        return {"logged_in": False}
+
+    return {
+        "logged_in": True,
+        "user_id": user.id,
+        "email": user.email,
+        "username": user.username,
+        "full_name": user.full_name,
+        "role": user.role,
+        "dashboard_url": get_user_dashboard_url(user)
+    }
+
