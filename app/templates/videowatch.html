@@ -426,14 +426,14 @@
                 preload="metadata"
                 playsinline
                 {% if video.thumbnail %}
-                poster="/static/{{ video.thumbnail }}"
+                poster="{{ video.thumbnail }}"
                 {% endif %}
             >
 
                 {% if video.filename %}
 
                 <source
-                    src="/static/{{ video.filename }}"
+                    src="{{ video.filename }}"
                     type="video/mp4"
                 >
 
