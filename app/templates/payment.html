@@ -663,383 +663,241 @@
     }
 
 
+            /*
+            ============================================================
+                CHECK IF THIS IS A PAYMENT CALLBACK TAB
+            ============================================================
+            */
 
-    /*
-    ============================================================
-        PAYMENT SUBMIT
-    ============================================================
-    */
+            const urlParams = new URLSearchParams(window.location.search);
+            const isPaymentTab = urlParams.get('payment_tab') === 'true';
 
-    paymentForm.addEventListener(
-        "submit",
-        async function(event) {
+            if (isPaymentTab) {
+                // This is the payment processing tab
+                const paymentMethod = urlParams.get('method') || 'Razorpay';
+                const bookId = Number(urlParams.get('book_id') || 0);
+                const userId = Number(urlParams.get('user_id') || 0);
+                const bookPrice = Number(urlParams.get('amount') || 0);
 
-            event.preventDefault();
-
-
-            const selectedMethod =
-                document.querySelector(
-                    'input[name="payment_method"]:checked'
-                );
-
-
-            if (!selectedMethod) {
-
-                showMessage(
-                    "Please select a payment method.",
-                    "error"
-                );
-
-                return;
-
+                // Auto-start payment processing in this tab
+                processPaymentInNewTab(userId, bookId, bookPrice, paymentMethod);
             }
 
 
-
             /*
-            ----------------------------------------------------
-                IMPORTANT
-
-                Your PaymentCreate Pydantic schema expects:
-
-                amount
-                payment_for
-                item_id
-                item_type
-
-                Therefore we send EXACTLY those fields.
-            ----------------------------------------------------
+            ============================================================
+                PROCESS PAYMENT IN NEW TAB
+            ============================================================
             */
 
-            const paymentData = {
+            async function processPaymentInNewTab(userId, bookId, bookPrice, paymentMethod) {
 
-                amount: Number(bookPrice),
+                const paymentData = {
+                    amount: Number(bookPrice),
+                    payment_for: "Book Purchase",
+                    item_id: Number(bookId),
+                    item_type: "book"
+                };
 
-                payment_for: "Book Purchase",
+                try {
 
-                item_id: Number(bookId),
+                    loading.style.display = "block";
+                    showMessage("Processing your payment...", "");
 
-                item_type: "book"
-
-            };
-
-
-
-            /*
-            ----------------------------------------------------
-                DISABLE BUTTON
-            ----------------------------------------------------
-            */
-
-            payButton.disabled = true;
-
-            payButton.textContent =
-                "Processing...";
-
-            loading.style.display =
-                "block";
-
-            message.className =
-                "message";
-
-            message.textContent = "";
-
-
-
-            try {
-
-                /*
-                ------------------------------------------------
-                    CREATE PAYMENT
-                ------------------------------------------------
-                */
-
-                const response =
-                    await fetch(
+                    // CREATE PAYMENT
+                    const response = await fetch(
                         "/payment/create",
                         {
                             method: "POST",
-
                             headers: {
-                                "Content-Type":
-                                    "application/json",
-
-                                "Accept":
-                                    "application/json"
+                                "Content-Type": "application/json",
+                                "Accept": "application/json"
                             },
-
-                            body:
-                                JSON.stringify(paymentData)
+                            body: JSON.stringify(paymentData)
                         }
                     );
 
+                    let result = null;
+                    const contentType = response.headers.get("content-type");
 
-
-                /*
-                ------------------------------------------------
-                    READ RESPONSE SAFELY
-                ------------------------------------------------
-                */
-
-                let result = null;
-
-                const contentType =
-                    response.headers.get(
-                        "content-type"
-                    );
-
-
-                if (
-                    contentType &&
-                    contentType.includes(
-                        "application/json"
-                    )
-                ) {
-
-                    result =
-                        await response.json();
-
-                } else {
-
-                    const text =
-                        await response.text();
-
-                    result = {
-                        detail: text
-                    };
-
-                }
-
-
-
-                /*
-                ------------------------------------------------
-                    ERROR
-                ------------------------------------------------
-                */
-
-                if (!response.ok) {
-
-                    let errorMessage =
-                        "Payment could not be created.";
-
-                    if (result) {
-
-                        if (Array.isArray(result.detail)) {
-
-                            errorMessage =
-                                result.detail
-                                    .map(function(error) {
-
-                                        if (
-                                            error &&
-                                            error.msg
-                                        ) {
-
-                                            return error.msg;
-
-                                        }
-
-                                        return JSON.stringify(error);
-
-                                    })
-                                    .join(", ");
-
-                        }
-
-                        else if (
-                            result.detail
-                        ) {
-
-                            errorMessage =
-                                result.detail;
-
-                        }
-
-                        else if (
-                            result.message
-                        ) {
-
-                            errorMessage =
-                                result.message;
-
-                        }
-
+                    if (contentType && contentType.includes("application/json")) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { detail: text };
                     }
 
+                    if (!response.ok) {
+                        throw new Error(result.detail || "Payment creation failed");
+                    }
 
-                    throw new Error(
-                        errorMessage
-                    );
+                    showMessage("Payment created successfully. Confirming purchase...", "success");
 
-                }
+                    // CONFIRM PURCHASE
+                    const confirmData = new URLSearchParams();
+                    confirmData.append("payment_method", paymentMethod);
 
-
-
-                /*
-                ------------------------------------------------
-                    PAYMENT CREATED SUCCESSFULLY
-                ------------------------------------------------
-                */
-
-                showMessage(
-                    "Payment created successfully. Completing your purchase...",
-                    "success"
-                );
-
-
-                /*
-                ------------------------------------------------
-                    NOW COMPLETE THE BOOK PURCHASE
-
-                    We send the selected payment method to
-                    your existing confirmation route.
-
-                    This keeps your existing purchase flow.
-                ------------------------------------------------
-                */
-
-                const confirmData =
-                    new URLSearchParams();
-
-
-                confirmData.append(
-                    "payment_method",
-                    selectedMethod.value
-                );
-
-
-                const confirmResponse =
-                    await fetch(
+                    const confirmResponse = await fetch(
                         `/student/${userId}/buy-book/${bookId}/confirm`,
                         {
                             method: "POST",
-
                             headers: {
-                                "Content-Type":
-                                    "application/x-www-form-urlencoded",
-
-                                "Accept":
-                                    "text/html,application/json"
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "Accept": "text/html,application/json"
                             },
-
-                            body:
-                                confirmData.toString()
+                            body: confirmData.toString()
                         }
                     );
 
+                    if (confirmResponse.ok) {
+                        // Store success in localStorage for the opener tab
+                        localStorage.setItem('payment_status', JSON.stringify({
+                            success: true,
+                            bookId: bookId,
+                            userId: userId,
+                            timestamp: new Date().getTime()
+                        }));
+
+                        showMessage("✅ Payment successful! Redirecting...", "success");
+
+                        // Notify opener window
+                        if (window.opener) {
+                            window.opener.postMessage({
+                                type: 'PAYMENT_SUCCESS',
+                                bookId: bookId,
+                                userId: userId
+                            }, '*');
+                        }
+
+                        // Close this tab after 2 seconds
+                        setTimeout(() => {
+                            window.close();
+                        }, 2000);
+
+                    } else {
+                        throw new Error("Payment confirmation failed");
+                    }
+
+                } catch (error) {
+
+                    console.error("Payment error:", error);
+
+                    // Store error in localStorage
+                    localStorage.setItem('payment_status', JSON.stringify({
+                        success: false,
+                        error: error.message,
+                        timestamp: new Date().getTime()
+                    }));
+
+                    // Notify opener window
+                    if (window.opener) {
+                        window.opener.postMessage({
+                            type: 'PAYMENT_ERROR',
+                            error: error.message
+                        }, '*');
+                    }
+
+                    showMessage("❌ " + (error.message || "Payment failed"), "error");
+
+                    // Close this tab after 3 seconds
+                    setTimeout(() => {
+                        window.close();
+                    }, 3000);
+
+                }
+
+            }
 
 
-                /*
-                ------------------------------------------------
-                    CONFIRMATION RESPONSE
-                ------------------------------------------------
-                */
 
-                if (
-                    confirmResponse.ok
-                ) {
+            /*
+            ============================================================
+                LISTEN FOR PAYMENT MESSAGES FROM PAYMENT TAB
+            ============================================================
+            */
 
-                    const contentType2 =
-                        confirmResponse.headers.get(
-                            "content-type"
+            window.addEventListener('message', function(event) {
+
+                if (event.data.type === 'PAYMENT_SUCCESS') {
+
+                    showMessage("✅ Payment successful! Redirecting...", "success");
+
+                    setTimeout(() => {
+                        window.location.replace(`/student/${event.data.userId}`);
+                    }, 1500);
+
+                } else if (event.data.type === 'PAYMENT_ERROR') {
+
+                    showMessage("❌ Payment failed: " + event.data.error, "error");
+
+                    // Re-enable pay button
+                    payButton.disabled = false;
+                    payButton.textContent = `🔒 Pay ₹${Number(bookPrice).toFixed(2)}`;
+                    loading.style.display = "none";
+
+                }
+
+            });
+
+
+
+            /*
+            ============================================================
+                PAYMENT SUBMIT - OPEN IN NEW TAB
+            ============================================================
+            */
+
+            paymentForm.addEventListener(
+                "submit",
+                async function(event) {
+
+                    event.preventDefault();
+
+                    const selectedMethod = document.querySelector(
+                        'input[name="payment_method"]:checked'
+                    );
+
+                    if (!selectedMethod) {
+
+                        showMessage(
+                            "Please select a payment method.",
+                            "error"
                         );
 
-
-                    /*
-                    If FastAPI returns a normal HTML page,
-                    replace the current page with it.
-                    */
-
-                    if (
-                        contentType2 &&
-                        contentType2.includes(
-                            "text/html"
-                        )
-                    ) {
-
-                        const html =
-                            await confirmResponse.text();
-
-                        document.open();
-
-                        document.write(html);
-
-                        document.close();
+                        return;
 
                     }
 
-                    else {
+                    // OPEN PAYMENT IN NEW TAB
+                    showMessage("Opening payment in new tab...", "");
 
-                        let confirmResult =
-                            await confirmResponse.json();
+                    const paymentUrl = new URL(window.location.href);
+                    paymentUrl.searchParams.set('payment_tab', 'true');
+                    paymentUrl.searchParams.set('method', selectedMethod.value);
+                    paymentUrl.searchParams.set('book_id', bookId);
+                    paymentUrl.searchParams.set('user_id', userId);
+                    paymentUrl.searchParams.set('amount', bookPrice);
 
-                        if (
-                            confirmResult.redirect
-                        ) {
-
-                            window.location.replace(
-                                confirmResult.redirect
-                            );
-
-                        }
-
-                        else {
-
-                            window.location.replace(
-                                `/student/${userId}`
-                            );
-
-                        }
-
-                    }
-
-                }
-
-                else {
-
-                    const confirmText =
-                        await confirmResponse.text();
-
-                    throw new Error(
-                        "Payment was created, but book confirmation failed. " +
-                        confirmText
+                    const paymentWindow = window.open(
+                        paymentUrl.toString(),
+                        'PaymentWindow',
+                        'width=600,height=800,resizable=yes,status=yes'
                     );
 
+                    if (!paymentWindow) {
+                        showMessage("❌ Please allow pop-ups and try again", "error");
+                        return;
+                    }
+
+                    showMessage("⏳ Waiting for payment completion in new tab...", "");
+                    payButton.disabled = true;
+                    payButton.textContent = "Waiting for payment...";
+
+                    // Clear any old payment status
+                    localStorage.removeItem('payment_status');
+
                 }
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Payment error:",
-                    error
-                );
-
-
-                loading.style.display =
-                    "none";
-
-
-                showMessage(
-                    error.message ||
-                    "Something went wrong. Please try again.",
-                    "error"
-                );
-
-
-                payButton.disabled =
-                    false;
-
-
-                payButton.textContent =
-                    `🔒 Pay ₹${Number(bookPrice).toFixed(2)}`;
-
-            }
-
-        }
-    );
+            );
 
 </script>
 
