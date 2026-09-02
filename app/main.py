@@ -9,6 +9,9 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
+import cloudinary
+import cloudinary.uploader
+
 from fastapi import (
     FastAPI,
     Request,
@@ -95,6 +98,29 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
+
+
+# ==================================================
+# CLOUDINARY CONFIGURATION
+# ==================================================
+
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True
+)
+
+def cloudinary_enabled():
+    return bool(
+        CLOUDINARY_CLOUD_NAME and
+        CLOUDINARY_API_KEY and
+        CLOUDINARY_API_SECRET
+    )
 
 
 def razorpay_enabled():
@@ -2375,27 +2401,64 @@ async def upload_seller_video(
             )
         )
 
-    video_filename = (
-        uuid.uuid4().hex
-        + video_extension
-    )
-
-    video_path = (
-        VIDEO_UPLOAD_DIR
-        / video_filename
-    )
+    # --------------------------------------------------------
+    # Upload Video to Cloudinary
+    # --------------------------------------------------------
 
     try:
 
-        with open(
-            video_path,
-            "wb"
-        ) as buffer:
+        if cloudinary_enabled():
 
-            shutil.copyfileobj(
+            # Upload to Cloudinary
+            video_upload = cloudinary.uploader.upload(
                 video.file,
-                buffer
+                resource_type="video",
+                folder="edunote/videos",
+                public_id=uuid.uuid4().hex,
+                overwrite=True,
+                eager=[
+                    {
+                        "quality": "auto",
+                        "fetch_format": "auto"
+                    }
+                ]
             )
+
+            video_url = video_upload.get("secure_url")
+            video_filename = video_upload.get("public_id")
+
+            if not video_url:
+
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to upload video to Cloudinary"
+                )
+
+        else:
+
+            # Fallback: Save locally
+            video_filename = (
+                uuid.uuid4().hex
+                + video_extension
+            )
+
+            video_path = (
+                VIDEO_UPLOAD_DIR
+                / video_filename
+            )
+
+            with open(
+                video_path,
+                "wb"
+            ) as buffer:
+
+                shutil.copyfileobj(
+                    video.file,
+                    buffer
+                )
+
+            video_url = f"uploads/videos/{video_filename}"
+            video_filename = f"uploads/videos/{video_filename}"
 
     except Exception as e:
 
@@ -2409,7 +2472,12 @@ async def upload_seller_video(
             detail="Unable to save video file"
         )
 
+    # --------------------------------------------------------
+    # Upload Thumbnail to Cloudinary
+    # --------------------------------------------------------
+
     thumbnail_filename = ""
+    thumbnail_url = ""
 
     if thumbnail and thumbnail.filename:
 
@@ -2434,14 +2502,6 @@ async def upload_seller_video(
             not in allowed_thumbnail_extensions
         ):
 
-            try:
-
-                if video_path.exists():
-                    video_path.unlink()
-
-            except Exception:
-                pass
-
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -2450,27 +2510,47 @@ async def upload_seller_video(
                 )
             )
 
-        thumbnail_filename = (
-            uuid.uuid4().hex
-            + thumbnail_extension
-        )
-
-        thumbnail_path = (
-            THUMBNAIL_UPLOAD_DIR
-            / thumbnail_filename
-        )
-
         try:
 
-            with open(
-                thumbnail_path,
-                "wb"
-            ) as buffer:
+            if cloudinary_enabled():
 
-                shutil.copyfileobj(
+                # Upload to Cloudinary
+                thumbnail_upload = cloudinary.uploader.upload(
                     thumbnail.file,
-                    buffer
+                    resource_type="image",
+                    folder="edunote/thumbnails",
+                    public_id=uuid.uuid4().hex,
+                    overwrite=True
                 )
+
+                thumbnail_url = thumbnail_upload.get("secure_url")
+                thumbnail_filename = thumbnail_upload.get("public_id")
+
+            else:
+
+                # Fallback: Save locally
+                thumbnail_filename = (
+                    uuid.uuid4().hex
+                    + thumbnail_extension
+                )
+
+                thumbnail_path = (
+                    THUMBNAIL_UPLOAD_DIR
+                    / thumbnail_filename
+                )
+
+                with open(
+                    thumbnail_path,
+                    "wb"
+                ) as buffer:
+
+                    shutil.copyfileobj(
+                        thumbnail.file,
+                        buffer
+                    )
+
+                thumbnail_url = f"uploads/thumbnails/{thumbnail_filename}"
+                thumbnail_filename = f"uploads/thumbnails/{thumbnail_filename}"
 
         except Exception as e:
 
@@ -2479,32 +2559,17 @@ async def upload_seller_video(
                 str(e)
             )
 
-            try:
-
-                if video_path.exists():
-                    video_path.unlink()
-
-            except Exception:
-                pass
-
             raise HTTPException(
                 status_code=500,
                 detail="Unable to save thumbnail"
             )
 
-    stored_video_path = (
-        "uploads/videos/"
-        + video_filename
-    )
+    # --------------------------------------------------------
+    # Store in Database
+    # --------------------------------------------------------
 
-    stored_thumbnail_path = ""
-
-    if thumbnail_filename:
-
-        stored_thumbnail_path = (
-            "uploads/thumbnails/"
-            + thumbnail_filename
-        )
+    stored_video_path = video_filename if cloudinary_enabled() else f"uploads/videos/{video_filename}"
+    stored_thumbnail_path = thumbnail_filename if cloudinary_enabled() and thumbnail_url else (f"uploads/thumbnails/{thumbnail_filename}" if thumbnail_filename else "")
 
     try:
 
