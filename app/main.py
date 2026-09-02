@@ -4690,7 +4690,7 @@ async def payu_response_callback(
             if payment.book_id:
                 return RedirectResponse(url=f"/read/{payment.book_id}?user_id={user_id}&payment=success", status_code=303)
             elif payment.video_id:
-                return RedirectResponse(url=f"/videowatch/{payment.video_id}?user_id={user_id}&payment=success", status_code=303)
+                return RedirectResponse(url=f"/video/{payment.video_id}?user_id={user_id}&payment=success", status_code=303)
 
         return RedirectResponse(url=f"/student/{user_id}?payment=success", status_code=303)
     else:
